@@ -36,10 +36,13 @@ td.h{font-weight:700;color:var(--ac);padding-top:12px;text-align:left;border-bot
 .big2{font-size:34px;font-weight:800;color:var(--ok);text-align:center;margin:2px 0 14px;line-height:1.15}
 .tab.on{background:var(--ac);color:#fff;border-color:var(--ac)}
 [hidden]{display:none!important}
+.tab{flex:1 1 0;font-size:13px;padding:8px 4px}
+.tabs{gap:4px}
+.tabs{flex-wrap:wrap}.tab{flex:1 1 45%}
 </style>
 </head>
 <body>
-<div class="tabs"><button class="tab on" data-t="t1">🧭 Расчёт поправки компаса</button><button class="tab" data-t="t2">🚢 Время в пути</button></div>
+<div class="tabs"><button class="tab on" data-t="t1">🧭 Расчёт поправки компаса</button><button class="tab" data-t="t2">🚢 Время в пути</button><button class="tab" data-t="t3">🌊 Приливы</button><button class="tab" data-t="t4">📖 Таблицы ATT</button></div>
 <section id="t1">
 
 <div class="card">
@@ -132,6 +135,136 @@ td.h{font-weight:700;color:var(--ac);padding-top:12px;text-align:left;border-bot
 <div class="note" id="twarn"></div>
 </div>
 <div class="note">Все расчёты идут через UTC. Пояс E: UTC = местное − №; пояс W: UTC = местное + №. Летнее время не учитывается — введите фактический пояс судового времени.</div>
+</section>
+
+<section id="t3" hidden>
+<div class="card">
+<h2>Порт</h2>
+<label>Название порта (поиск по всему миру)</label>
+<input id="pname" placeholder="например, Rotterdam или Владивосток">
+<button class="sec" id="psearch">🔎 Найти порт</button>
+<select id="pres" hidden style="margin-top:8px"></select>
+<label>Широта φ: градусы, минуты и десятые, N/S</label>
+<div class="c3"><input id="pld" inputmode="numeric" placeholder="град"><input id="plm" inputmode="decimal" placeholder="мин.м"><select id="pls"><option>N</option><option>S</option></select></div>
+<label>Долгота λ: градусы, минуты и десятые, E/W</label>
+<div class="c3"><input id="pnd" inputmode="numeric" placeholder="град"><input id="pnm" inputmode="decimal" placeholder="мин.м"><select id="pns"><option>E</option><option>W</option></select></div>
+<button class="sec" id="pgps">📍 Взять координаты с GPS</button>
+<div class="note" id="pmsg"></div>
+</div>
+<div class="card">
+<h2>Прогноз приливов и отливов</h2>
+<div class="row">
+<div><label>Дата начала (местная)</label><input id="pdate" type="date"></div>
+<div><label>Сколько суток</label><select id="pdays"><option>1</option><option selected>2</option><option>3</option><option>7</option></select></div>
+</div>
+<div class="row">
+<div><label>Момент для высоты воды</label><input id="ptime" type="time"></div>
+<div><label>Часовой пояс, E/W</label><div class="c3"><select id="pzn"></select><select id="pzs"><option>E</option><option>W</option></select></div></div>
+</div>
+<button id="pgo">Получить прогноз</button>
+<div class="note err" id="pmsg2"></div>
+</div>
+<div class="card" id="pout" hidden>
+<h2>Результат</h2>
+<div class="lbl">Высота воды в выбранный момент</div><div class="big2" id="phh"></div>
+<div class="note" id="phd" style="text-align:center"></div>
+<table id="ptb"></table>
+</div>
+<div class="note">Прогноз глобальной модели (сетка ≈ 8 км), высота относительно среднего уровня моря (не от нуля глубин карты). В узких заливах и у берега возможны ошибки времени и высоты — для навигации используйте официальные таблицы приливов. Данные: Open-Meteo Marine (DWD, CC BY 4.0). Нужен интернет.</div>
+<div class="card" style="margin-top:12px">
+<h2>Расчёт по таблицам (без интернета)</h2>
+<div class="note" style="margin-top:0">Введите два соседних события из таблиц приливов (ПВ и МВ, в любом порядке) в одном поясе времени.</div>
+<div class="row">
+<div><label>Событие 1: время</label><input id="m1t" type="time"></div>
+<div><label>Высота, м</label><input id="m1h" inputmode="decimal"></div>
+</div>
+<div class="row">
+<div><label>Событие 2: время</label><input id="m2t" type="time"></div>
+<div><label>Высота, м</label><input id="m2h" inputmode="decimal"></div>
+</div>
+<div class="row">
+<div><label>Момент: время</label><input id="mxt" type="time"></div>
+<div><label>Нужная высота, м</label><input id="mxh" inputmode="decimal"></div>
+</div>
+<div class="note err" id="merr"></div>
+<div id="mout" hidden>
+<div class="lbl">Высота в заданный момент</div><div class="big2" id="mh"></div>
+<div class="lbl">Время достижения нужной высоты</div><div class="big2" id="mtm"></div>
+</div>
+<div class="note">Метод косинусоиды (как в таблицах приливов Адмиралтейства): h = ½(h₁ + h₂) + ½(h₁ − h₂)·cos(π·t/Δ).</div>
+</div>
+</section>
+
+<section id="t4" hidden>
+<div class="card">
+<h2>Режим</h2>
+<select id="amode"><option value="std">Основной порт (ATT, часть I)</option><option value="sec">Вторичный порт (ATT, часть II)</option></select>
+<button class="sec" id="aex">Заполнить условный пример</button>
+<div class="note">Данные портов (ПВ/МВ, уровни, разности) берутся из таблиц приливов Адмиралтейства (ATT) на нужную дату. Все времена и высоты вводятся в том же поясе и от того же нуля глубин.</div>
+</div>
+<div class="card">
+<h2>Основной порт: ПВ и МВ на дату</h2>
+<div class="row">
+<div><label>ПВ: время</label><input id="eht" type="time"></div>
+<div><label>ПВ: высота, м</label><input id="ehh" inputmode="decimal"></div>
+</div>
+<div class="row">
+<div><label>МВ: время</label><input id="elt" type="time"></div>
+<div><label>МВ: высота, м</label><input id="elh" inputmode="decimal"></div>
+</div>
+<div class="note">Введите соседние ПВ и МВ, между которыми лежит нужный момент.</div>
+<label>Средние уровни основного порта, м (MHWS, MHWN, MLWN, MLWS)</label>
+<div class="row">
+<div><input id="sa1" inputmode="decimal" placeholder="MHWS"></div>
+<div><input id="sa2" inputmode="decimal" placeholder="MHWN"></div>
+</div>
+<div class="row" style="margin-top:8px">
+<div><input id="sa3" inputmode="decimal" placeholder="MLWN"></div>
+<div><input id="sa4" inputmode="decimal" placeholder="MLWS"></div>
+</div>
+</div>
+<div class="card" id="asec" hidden>
+<h2>Вторичный порт: разности из ATT</h2>
+<label>Разности времени для ПВ: время в основном порту и разность (±ччмм)</label>
+<div class="row"><div><input id="hra" type="time"></div><div><input id="hrad" placeholder="+0120"></div></div>
+<div class="row" style="margin-top:8px"><div><input id="hrb" type="time"></div><div><input id="hrbd" placeholder="+0100"></div></div>
+<label>Разности времени для МВ</label>
+<div class="row"><div><input id="lra" type="time"></div><div><input id="lrad" placeholder="+0110"></div></div>
+<div class="row" style="margin-top:8px"><div><input id="lrb" type="time"></div><div><input id="lrbd" placeholder="+0050"></div></div>
+<label>Разности высот, м (MHWS, MHWN, MLWN, MLWS)</label>
+<div class="row"><div><input id="d1" inputmode="text" placeholder="MHWS"></div><div><input id="d2" inputmode="text" placeholder="MHWN"></div></div>
+<div class="row" style="margin-top:8px"><div><input id="d3" inputmode="text" placeholder="MLWN"></div><div><input id="d4" inputmode="text" placeholder="MLWS"></div></div>
+<label>Сезонная поправка, м (необязательно)</label>
+<input id="zc" inputmode="text" placeholder="0">
+</div>
+<div class="card">
+<h2>Момент и безопасность</h2>
+<div class="row">
+<div><label>Момент: время</label><input id="atx" type="time"></div>
+<div><label>Осадка судна, м</label><input id="adraft" inputmode="decimal"></div>
+</div>
+<div class="row">
+<div><label>Глубина на карте, м</label><input id="adepth" inputmode="decimal" placeholder="осушка со знаком −"></div>
+<div><label>Запас под килем, м</label><input id="amargin" inputmode="decimal"></div>
+</div>
+<div class="row">
+<div><label>Габарит моста над MHWS, м</label><input id="abridge" inputmode="decimal"></div>
+<div><label>Высота судна над водой, м</label><input id="aship" inputmode="decimal"></div>
+</div>
+</div>
+<div class="note err" id="aerr"></div>
+<div class="card" id="aout" hidden>
+<h2>Результат</h2>
+<div class="lbl">Высота воды в момент</div><div class="big2" id="ah"></div>
+<div class="note" id="ahd" style="text-align:center"></div>
+<div class="lbl">Нужная высота воды для прохода</div><div class="big2" id="ahn"></div>
+<div class="note" id="aht" style="text-align:center"></div>
+<div class="lbl">Запас под килем в момент</div><div class="big2" id="aukc"></div>
+<div class="lbl">Просвет под мостом в момент</div><div class="big2" id="abr"></div>
+<table id="atb"></table>
+<div class="note" id="awarn"></div>
+</div>
+<div class="note">Метод ATT: разности времени интерполируются по времени ПВ/МВ основного порта (период 12 ч), разности высот по высоте воды основного порта между сизигией и квадратурой; высота в промежуточный момент считается по косинусоиде. Печатные приливные кривые ATT для конкретных портов могут отличаться на несколько дециметров. Заметно точнее ручные расчёты по приливным кривым из таблиц.</div>
 </section>
 
 <script>
@@ -288,7 +421,7 @@ function calc(){
 $("calc").onclick=calc;
 document.querySelectorAll(".tab").forEach(function(b){b.onclick=function(){
   document.querySelectorAll(".tab").forEach(function(x){x.classList.toggle("on",x===b)});
-  $("t1").hidden=b.dataset.t!=="t1";$("t2").hidden=b.dataset.t!=="t2";
+  ["t1","t2","t3","t4"].forEach(function(id){$(id).hidden=b.dataset.t!==id});
 }});
 ["tzn","azn"].forEach(function(id){var h="";for(var i=0;i<=12;i++)h+="<option value=\""+i+"\">"+i+"</option>";$(id).innerHTML=h});
 (function(){var d=new Date(),o=-d.getTimezoneOffset()/60;
@@ -335,6 +468,143 @@ function tcalc(){
 }
 ["tdate","ttime","tzn","tzs","azn","azs","sdate","stime","dist","spd"].forEach(function(id){$(id).addEventListener("input",tcalc);$(id).addEventListener("change",tcalc)});
 if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}
+
+var TD=null,PR=[];
+function zoneT(){return ($("pzs").value==="E"?1:-1)*n($("pzn").value)}
+(function(){var h="";for(var i=0;i<=12;i++)h+="<option value=\""+i+"\">"+i+"</option>";$("pzn").innerHTML=h;
+  var d=new Date(),o=-d.getTimezoneOffset()/60;$("pzn").value=String(Math.min(12,Math.round(Math.abs(o))));$("pzs").value=o>=0?"E":"W";
+  $("pdate").value=d.getFullYear()+"-"+pad(d.getMonth()+1,2)+"-"+pad(d.getDate(),2);
+  $("ptime").value=pad(d.getHours(),2)+":"+pad(d.getMinutes(),2);})();
+function autoZone(lon){$("pzn").value=String(Math.min(12,Math.round(Math.abs(lon)/15)));$("pzs").value=lon>=0?"E":"W"}
+function pickPort(i){var r=PR[i];if(!r)return;setC("pl",r.latitude,"N","S");setC("pn",r.longitude,"E","W");autoZone(r.longitude);$("pmsg").className="note";$("pmsg").textContent="Выбрано: "+r.name+(r.country?", "+r.country:"")}
+$("pres").onchange=function(){pickPort(+this.value)};
+$("psearch").onclick=function(){
+  var q=$("pname").value.trim(),m=$("pmsg");if(!q)return;
+  m.className="note";m.textContent="Ищу…";
+  fetch("https://geocoding-api.open-meteo.com/v1/search?count=8&language=ru&format=json&name="+encodeURIComponent(q)).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}).then(function(j){
+    PR=j.results||[];
+    if(!PR.length){m.textContent="Ничего не найдено. Попробуйте название латиницей или введите координаты.";$("pres").hidden=true;return}
+    $("pres").innerHTML=PR.map(function(r,i){return "<option value=\""+i+"\">"+r.name+(r.admin1?", "+r.admin1:"")+(r.country?", "+r.country:"")+"</option>"}).join("");
+    $("pres").hidden=PR.length<2;pickPort(0);
+  }).catch(function(e){m.className="note err";m.textContent="Поиск не удался ("+e.message+"). Нужен интернет; введите координаты вручную."});
+};
+$("pgps").onclick=function(){
+  var m=$("pmsg");m.className="note";m.textContent="Определяю…";
+  if(!navigator.geolocation){m.className="note err";m.textContent="GPS недоступен — введите координаты вручную.";return}
+  navigator.geolocation.getCurrentPosition(function(p){setC("pl",p.coords.latitude,"N","S");setC("pn",p.coords.longitude,"E","W");autoZone(p.coords.longitude);m.textContent="Готово, точность ≈ "+Math.round(p.coords.accuracy)+" м"},function(e){m.className="note err";m.textContent="Не удалось получить GPS ("+e.message+")."},{enableHighAccuracy:true,timeout:15000});
+};
+$("pgo").onclick=function(){
+  var lat=getC("pl","N"),lon=getC("pn","E"),m=$("pmsg2");m.className="note err";m.textContent="";
+  if(isNaN(lat)||isNaN(lon)||Math.abs(lat)>90||Math.abs(lon)>180){m.textContent="Введите координаты порта или найдите порт по названию.";return}
+  m.className="note";m.textContent="Загружаю…";
+  fetch("https://marine-api.open-meteo.com/v1/marine?latitude="+lat.toFixed(4)+"&longitude="+lon.toFixed(4)+"&hourly=sea_level_height_msl&past_days=2&forecast_days=7&timezone=GMT").then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}).then(function(j){
+    var T=j.hourly&&j.hourly.time,V=j.hourly&&j.hourly.sea_level_height_msl;
+    if(!V||V.every(function(v){return v===null})){TD=null;m.className="note err";m.textContent="Для этой точки нет данных модели (слишком близко к берегу или вдали от моря). Сдвиньте координаты в открытую воду рядом с портом.";return}
+    TD={t:T.map(function(x){return Date.parse(x+":00Z")}),v:V};
+    m.textContent="Готово";renderTide();
+  }).catch(function(e){m.className="note err";m.textContent="Не удалось получить данные ("+e.message+"). Нужен интернет; в окне claude.ai запрос может быть заблокирован — откройте приложение по адресу GitHub."});
+};
+function heightAt(ms){var t=TD.t,v=TD.v;if(ms<t[0]||ms>=t[t.length-1])return null;var i=Math.floor((ms-t[0])/3600000),a=v[i],b=v[i+1];if(a==null||b==null)return null;var f=(ms-t[i])/3600000;return a+(b-a)*(1-Math.cos(Math.PI*f))/2}
+function sg(x){return (x>=0?"+":"−")+Math.abs(x).toFixed(2)}
+function renderTide(){
+  if(!TD)return;
+  var z=zoneT(),t=TD.t,v=TD.v,ds=$("pdate").value.split("-"),days=+$("pdays").value;
+  if(ds.length<3||isNaN(z))return;
+  var s0=Date.UTC(+ds[0],+ds[1]-1,+ds[2])-z*3600000,s1=s0+days*86400000,rows=[];
+  for(var i=1;i<t.length-1;i++){
+    var a=v[i-1],b=v[i],c=v[i+1];if(a==null||b==null||c==null)continue;
+    var hw=b>a&&b>=c,lw=b<a&&b<=c;if(!hw&&!lw)continue;
+    var den=a-2*b+c,dl=den?0.5*(a-c)/den:0,tm=t[i]+dl*3600000,h=b-0.25*(a-c)*dl;
+    if(tm<s0||tm>=s1)continue;
+    rows.push([tm,hw,h]);
+  }
+  var out=rows.map(function(r){var d=new Date(r[0]+z*3600000);return "<tr><td>"+pad(d.getUTCDate(),2)+"."+pad(d.getUTCMonth()+1,2)+" "+pad(d.getUTCHours(),2)+":"+pad(d.getUTCMinutes(),2)+"</td><td>"+(r[1]?"ПВ (полная вода)":"МВ (малая вода)")+"</td><td>"+sg(r[2])+" м</td></tr>"}).join("");
+  $("ptb").innerHTML=out||"<tr><td>В выбранном периоде нет данных (прогноз доступен около 7 суток вперёд).</td></tr>";
+  var tt=($("ptime").value||"").split(":"),hh=$("phh"),hd=$("phd");
+  hh.textContent="—";hd.textContent="";
+  if(tt.length>=2){
+    var ms=s0+(+tt[0]*60+ +tt[1])*60000,h0=heightAt(ms),h1=heightAt(ms+600000);
+    if(h0!=null){hh.textContent=sg(h0)+" м";hd.textContent=h1==null?"":(h1>h0?"вода прибывает":"вода убывает")+" · относительно среднего уровня моря"}
+  }
+  $("pout").hidden=false;
+}
+["pdate","pdays","ptime","pzn","pzs"].forEach(function(id){$(id).addEventListener("input",renderTide);$(id).addEventListener("change",renderTide)});
+function mcalc(){
+  var e=$("merr");e.textContent="";$("mout").hidden=true;
+  function tp(id){var s=$(id).value;if(!s)return NaN;var p=s.split(":");return +p[0]+p[1]/60}
+  var t1=tp("m1t"),t2=tp("m2t"),h1=n($("m1h").value),h2=n($("m2h").value);
+  if(isNaN(t1)||isNaN(t2)||isNaN(h1)||isNaN(h2))return;
+  var D=((t2-t1)%24+24)%24,A=(h1-h2)/2,Hm=(h1+h2)/2;
+  if(D<0.25||Math.abs(A)<0.005){e.textContent="Проверьте данные: события должны различаться по времени и высоте.";return}
+  var tx=tp("mxt"),hx=n($("mxh").value),msg=[];
+  $("mh").textContent="—";$("mtm").textContent="—";
+  if(!isNaN(tx)){var t=((tx-t1)%24+24)%24;if(t>D)msg.push("Момент вне интервала между введёнными событиями.");else $("mh").textContent=sg(Hm+A*Math.cos(Math.PI*t/D))+" м"}
+  if(!isNaN(hx)){var c=(hx-Hm)/A;if(Math.abs(c)>1)msg.push("Нужная высота вне диапазона между событиями.");else $("mtm").textContent=hm(t1+D/Math.PI*Math.acos(c))}
+  e.textContent=msg.join(" ");
+  $("mout").hidden=false;
+}
+["m1t","m1h","m2t","m2h","mxt","mxh"].forEach(function(id){$(id).addEventListener("input",mcalc);$(id).addEventListener("change",mcalc)});
+
+function pd(s){s=(s||"").replace(/\s/g,"").replace("−","-");if(!s)return NaN;var sg=1;if(s[0]==="-"){sg=-1;s=s.slice(1)}else if(s[0]==="+")s=s.slice(1);var h,m;if(s.indexOf(":")>=0){var p=s.split(":");h=+p[0];m=+p[1]}else if(s.length<=2){h=0;m=+s}else{h=+s.slice(0,-2);m=+s.slice(-2)}if(isNaN(h)||isNaN(m))return NaN;return sg*(h+m/60)}
+function pn(s){return n(String(s).replace("−","-"))}
+function tpv(id){var s=$(id).value;if(!s)return NaN;var p=s.split(":");return +p[0]+p[1]/60}
+function interpT(x,a,b){
+  var ta=((a[0]%12)+12)%12,tb=((b[0]%12)+12)%12;x=((x%12)+12)%12;
+  if(ta>tb){var q=a;a=b;b=q;var w=ta;ta=tb;tb=w}
+  if(tb-ta<1e-9)return a[1];
+  if(x>=ta&&x<=tb)return a[1]+(b[1]-a[1])*(x-ta)/(tb-ta);
+  var xx=x<ta?x+12:x;return b[1]+(a[1]-b[1])*(xx-tb)/(ta+12-tb);
+}
+function fT(t){var d=Math.floor(t/24);return hm(t)+(d>0?" (+"+d+" сут)":d<0?" ("+d+" сут)":"")}
+function acalc(){
+  var e=$("aerr"),w=[];e.textContent="";$("aout").hidden=true;
+  $("asec").hidden=$("amode").value!=="sec";
+  var L=["sa1","sa2","sa3","sa4"].map(function(i){return n($(i).value)});
+  var tH=tpv("eht"),hH=n($("ehh").value),tL=tpv("elt"),hL=n($("elh").value);
+  if(isNaN(tH)||isNaN(hH)||isNaN(tL)||isNaN(hL))return;
+  var sec=$("amode").value==="sec",tH2=tH,tL2=tL,hH2=hH,hL2=hL,lv=L.slice(),rows=[];
+  if(sec){
+    if(L.some(isNaN)){e.textContent="Для вторичного порта введите уровни основного порта MHWS, MHWN, MLWN, MLWS.";return}
+    var dH=[pd($("hrad").value),pd($("hrbd").value)],dL=[pd($("lrad").value),pd($("lrbd").value)],rH=[tpv("hra"),tpv("hrb")],rL=[tpv("lra"),tpv("lrb")];
+    var dd=["d1","d2","d3","d4"].map(function(i){return pn($(i).value)}),z=pn($("zc").value);if(isNaN(z))z=0;
+    if(dH.concat(dL,rH,rL,dd).some(isNaN)){e.textContent="Введите все разности времени и высот вторичного порта (время в формате ±ччмм, например +0120).";return}
+    var dtH=interpT(tH,[rH[0],dH[0]],[rH[1],dH[1]]),dtL=interpT(tL,[rL[0],dL[0]],[rL[1],dL[1]]);
+    tH2=tH+dtH;tL2=tL+dtL;
+    var fH=L[0]===L[1]?0:(hH-L[1])/(L[0]-L[1]),fL=L[2]===L[3]?0:(hL-L[2])/(L[3]-L[2]);
+    var dhH=dd[1]+fH*(dd[0]-dd[1]),dhL=dd[2]+fL*(dd[3]-dd[2]);
+    hH2=hH+dhH+z;hL2=hL+dhL+z;
+    if(fH<-0.05||fH>1.05||fL<-0.05||fL>1.05)w.push("Высота основного порта вне диапазона сизигия–квадратура: применена экстраполяция.");
+    lv=[L[0]+dd[0],L[1]+dd[1],L[2]+dd[2],L[3]+dd[3]];
+    rows.push(["Поправка времени ПВ / МВ",(dtH>=0?"+":"−")+hm(Math.abs(dtH))+" / "+(dtL>=0?"+":"−")+hm(Math.abs(dtL))]);
+    rows.push(["Поправка высоты ПВ / МВ",sg(dhH+z)+" / "+sg(dhL+z)+" м"]);
+  }
+  rows.unshift(["ПВ порта",fT(tH2)+" · "+sg(hH2)+" м"],["МВ порта",fT(tL2)+" · "+sg(hL2)+" м"]);
+  if(!lv.some(isNaN))rows.push(["MHWS / MHWN / MLWN / MLWS",lv.map(function(x){return x.toFixed(2)}).join(" / ")]);
+  var DHL=((tL2-tH2)%24+24)%24,DLH=((tH2-tL2)%24+24)%24,t1,h1,t2,h2,D;
+  if(DHL<=DLH){t1=tH2;h1=hH2;t2=tL2;h2=hL2;D=DHL}else{t1=tL2;h1=hL2;t2=tH2;h2=hH2;D=DLH}
+  $("atb").innerHTML=rows.map(function(r){return "<tr><td>"+r[0]+"</td><td>"+r[1]+"</td></tr>"}).join("");
+  ["ah","ahn","aukc","abr"].forEach(function(i){$(i).textContent="—"});$("ahd").textContent="";$("aht").textContent="";
+  if(D<0.5||D>9||hH2<=hL2){e.textContent="ПВ и МВ должны быть соседними событиями (интервал 0,5–9 ч, ПВ выше МВ). Сейчас интервал "+D.toFixed(1)+" ч.";$("aout").hidden=false;return}
+  var Hm=(h1+h2)/2,A=(h1-h2)/2,tx=tpv("atx"),hx=NaN;
+  if(!isNaN(tx)){var t=((tx-t1)%24+24)%24;if(t<=D){hx=Hm+A*Math.cos(Math.PI*t/D);$("ah").textContent=sg(hx)+" м";$("ahd").textContent=h2>h1?"вода прибывает":"вода убывает"}else w.push("Момент вне интервала между введёнными ПВ и МВ.")}
+  var dep=n($("adepth").value),dr=n($("adraft").value),mg=n($("amargin").value);if(isNaN(mg))mg=0;
+  if(!isNaN(dep)&&!isNaN(dr)){
+    var need=dr+mg-dep;$("ahn").textContent=sg(need)+" м";
+    var mx=Math.max(h1,h2),mn=Math.min(h1,h2);
+    if(need>mx)$("aht").textContent="В этом цикле вода не достигает нужной высоты.";
+    else if(need<mn)$("aht").textContent="Нужная высота обеспечена на всём интервале "+fT(t1)+"–"+fT(t2)+".";
+    else{var tt=t1+D/Math.PI*Math.acos((need-Hm)/A);$("aht").textContent=(h2>h1?"Вода поднимется до нужной высоты в ":"Вода опустится до нужной высоты в ")+fT(tt)}
+    if(!isNaN(hx)){var u=dep+hx-dr;$("aukc").textContent=sg(u)+" м";if(u<mg)w.push("Запас под килем меньше заданного.")}
+  }
+  var cl=n($("abridge").value),air=n($("aship").value);
+  if(!isNaN(cl)&&!isNaN(air)&&!isNaN(hx)){if(isNaN(lv[0]))w.push("Для просвета под мостом введите MHWS.");else{var c=cl+lv[0]-hx-air;$("abr").textContent=sg(c)+" м";if(c<0)w.push("Просвет под мостом отрицательный: проход невозможен.")}}
+  $("awarn").textContent=w.join(" ");$("aout").hidden=false;
+}
+["amode","eht","ehh","elt","elh","sa1","sa2","sa3","sa4","hra","hrad","hrb","hrbd","lra","lrad","lrb","lrbd","d1","d2","d3","d4","zc","atx","adraft","adepth","amargin","abridge","aship"].forEach(function(id){$(id).addEventListener("input",acalc);$(id).addEventListener("change",acalc)});
+$("aex").onclick=function(){
+  var v={amode:"sec",eht:"12:40",ehh:"4.7",elt:"18:55",elh:"1.0",sa1:"5.0",sa2:"3.9",sa3:"1.6",sa4:"0.6",hra:"02:00",hrad:"+0020",hrb:"08:00",hrbd:"+0040",lra:"05:00",lrad:"+0015",lrb:"11:00",lrbd:"+0035",d1:"-0.4",d2:"-0.3",d3:"-0.1",d4:"-0.1",zc:"0",atx:"15:30",adraft:"5.2",adepth:"3.0",amargin:"0.5",abridge:"12",aship:"9"};
+  for(var k in v)$(k).value=v[k];acalc();
+};
 </script>
 </body>
 </html>
