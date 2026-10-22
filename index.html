@@ -9,8 +9,8 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Компас">
-<title>Расчёт поправки компаса</title>
+<meta name="apple-mobile-web-app-title" content="Навигация">
+<title>Навигация</title>
 <style>
 :root{--bg:#f4f6f9;--card:#fff;--tx:#14202e;--mut:#5d6b7c;--ac:#0b63c5;--bd:#d5dce5;--ok:#0a7a45;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1621;--card:#17212f;--tx:#e8eef6;--mut:#93a2b5;--ac:#5aa6ff;--bd:#2b394b;--ok:#4cd391}}
@@ -39,21 +39,29 @@ td.h{font-weight:700;color:var(--ac);padding-top:12px;text-align:left;border-bot
 .tab{flex:1 1 0;font-size:13px;padding:8px 4px}
 .tabs{gap:4px}
 .tabs{flex-wrap:wrap}.tab{flex:1 1 45%}
-#t1res .wideonly{display:none}
 @media (min-width:600px){
  body{max-width:1280px;margin:0 auto}
- #t1{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+ #t1wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
  #t1res{order:1;position:sticky;top:8px;max-height:calc(100vh - 16px);overflow:auto}
  #t1in{order:2}
  #t1res .wideonly{display:block}
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark}}
 input::-webkit-calendar-picker-indicator{opacity:1;cursor:pointer}
+.seg{display:none}
+@media (max-width:599px){
+ .seg{display:flex;gap:6px;margin-bottom:10px}
+ .seg button{margin:0;padding:9px 6px;font-size:14px;background:var(--card);color:var(--tx);border:1px solid var(--bd)}
+ .seg button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+ #t1wrap{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;align-items:flex-start}
+ #t1res,#t1in{flex:0 0 100%;min-width:0;scroll-snap-align:start}
+ #t1res{order:1}#t1in{order:2}
+}
 </style>
 </head>
 <body>
-<div class="tabs"><button class="tab on" data-t="t1">🧭 Расчёт поправки компаса</button><button class="tab" data-t="t2">🚢 Время в пути</button><button class="tab" data-t="t3">🌊 Приливы</button><button class="tab" data-t="t4">📖 Таблицы ATT</button><button class="tab" data-t="t5">⚖️ Расчёт метацентрической высоты по периоду качки</button></div>
-<section id="t1"><div id="t1in">
+<div class="tabs"><button class="tab on" data-t="t1">🧭 Расчёт поправки компаса</button><button class="tab" data-t="t2">🚢 Расчёт ETA</button><button class="tab" data-t="t3">🌊 Приливы</button><button class="tab" data-t="t4">📖 Таблицы ATT</button><button class="tab" data-t="t5">⚖️ Расчёт метацентрической высоты по периоду качки</button></div>
+<section id="t1"><div class="seg" id="t1seg"><button data-p="res">📊 Результат</button><button data-p="in" class="on">✏️ Ввод данных</button></div><div id="t1wrap"><div id="t1in">
 
 <div class="card">
 <h2>Координаты</h2>
@@ -106,6 +114,7 @@ input::-webkit-calendar-picker-indicator{opacity:1;cursor:pointer}
 
 <div class="note">Данные МАЕ и МТ вычисляются внутри приложения теми же величинами, что в таблицах (GHA, Dec, d, SHA, SD, ур. времени, амплитуда, рефракция, параллакс, наклонение). Солнце ≈ ±0,01°. Звёзды: координаты J2000 + собственное движение, прецессия, нутация и аберрация — SHA и Dec считаются на любую дату. Для ответственных случаев сверяйте с печатным МАЕ. Луна и планеты не включены.</div>
 
+</div>
 </div>
 </section>
 
@@ -327,7 +336,7 @@ input::-webkit-calendar-picker-indicator{opacity:1;cursor:pointer}
 <div class="note" id="gw"></div>
 </div>
 <div class="card">
-<h2>Осадка при крене</h2>
+<h2>Приращение осадки при крене</h2>
 <label>Угол крена θ, градусы</label>
 <input id="kth" inputmode="decimal" placeholder="например 5">
 <div class="note">Ширина B и осадка d берутся из профиля судна выше.</div>
@@ -482,17 +491,19 @@ function calc(){
   var dk=n180(az-kp),kind=$("ctype").value;
   $("dk").textContent=(kind==="gyro"?"ΔГК = ":"ΔK = ")+(dk>=0?"+":"−")+Math.abs(dk).toFixed(1)+"°";
   $("dkl").textContent=name+" · "+(dk>=0?"E (плюс)":"W (минус)")+" · ΔK = ИП − КП";
-  R.push(["#","Результат"]);
-  R.push(["ИП / КП",az.toFixed(1)+"° / "+kp.toFixed(1)+"°"]);
-  R.push([kind==="gyro"?"Поправка гирокомпаса ΔГК":"Общая поправка ΔK",(dk>=0?"+":"−")+Math.abs(dk).toFixed(1)+"°"]);
-  var v=n($("var").value);
-  if(kind==="mag"&&!isNaN(v)){var dv=dk-v;R.push(["Девиация δ = ΔK − d",(dv>=0?"+":"−")+Math.abs(dv).toFixed(1)+"°"])}
+  var v=n($("var").value),sgn=function(x){return (x>=0?"+":"−")+Math.abs(x).toFixed(1)+"°"},S=[["#","Итог"]];
+  if(kind==="gyro"){
+    S.push(["Поправка гирокомпаса ΔГК",sgn(dk)],["Истинный пеленг (азимут) ИП",az.toFixed(1)+"°"],["Гирокомпасный пеленг ГКП",kp.toFixed(1)+"°"]);
+  }else{
+    S.push(["Поправка компаса ΔK",sgn(dk)],["Истинный пеленг (азимут) ИП",az.toFixed(1)+"°"],["Компасный пеленг КП",kp.toFixed(1)+"°"],["Магнитное склонение d",isNaN(v)?"не введено":sgn(v)],["Девиация δ = ΔK − d",isNaN(v)?"введите склонение d":sgn(dk-v)],["Поправка магнитного компаса ΔMK = d + δ",sgn(dk)]);
+  }
+  R=S.concat(R);
   $("tb").innerHTML=R.map(function(r){return r[0]==="#"?"<tr><td class=\"h\" colspan=\"2\">"+r[1]+"</td></tr>":"<tr><td>"+r[0]+"</td><td>"+r[1]+"</td></tr>"}).join("");
   if(h<-1)w.push("Светило под горизонтом ("+h.toFixed(1)+"°): проверьте дату, время и пояс.");
   if(h>60)w.push("Высота больше 60°: азимут меняется очень быстро, точность пеленга низкая.");
   if(kind==="mag")w.push("Для магнитного компаса ΔK — общая поправка (склонение + девиация).");
   $("warn").textContent=w.join(" ");
-  $("out").hidden=false;$("ph").hidden=true;if(!window.matchMedia("(min-width:600px)").matches)$("out").scrollIntoView({behavior:"smooth"});
+  $("out").hidden=false;$("ph").hidden=true;if(!window.matchMedia("(min-width:600px)").matches){if(window.showP)window.showP("res");window.scrollTo({top:0,behavior:"smooth"})}
 }
 $("calc").onclick=calc;
 document.querySelectorAll(".tab").forEach(function(b){b.onclick=function(){
@@ -786,6 +797,15 @@ function kcalc(){
   $("kw").textContent=w.join(" ");$("kout").hidden=false;
 }
 ["gB","gd","kth"].forEach(function(id){$(id).addEventListener("input",kcalc);$(id).addEventListener("change",kcalc)});
+
+(function(){
+  var w=$("t1wrap"),btns=document.querySelectorAll("#t1seg button");
+  function mark(){var r=w.scrollLeft<w.clientWidth/2;btns.forEach(function(b){b.classList.toggle("on",(b.getAttribute("data-p")==="res")===r)})}
+  window.showP=function(p){w.scrollTo({left:p==="res"?0:w.scrollWidth,behavior:"smooth"})};
+  btns.forEach(function(b){b.onclick=function(){window.showP(b.getAttribute("data-p"))}});
+  w.addEventListener("scroll",mark);
+  if(window.matchMedia("(max-width:599px)").matches)setTimeout(function(){w.scrollLeft=w.scrollWidth;mark()},50);
+})();
 </script>
 </body>
 </html>
