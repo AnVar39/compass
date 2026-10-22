@@ -39,11 +39,19 @@ td.h{font-weight:700;color:var(--ac);padding-top:12px;text-align:left;border-bot
 .tab{flex:1 1 0;font-size:13px;padding:8px 4px}
 .tabs{gap:4px}
 .tabs{flex-wrap:wrap}.tab{flex:1 1 45%}
+#t1res .wideonly{display:none}
+@media (min-width:600px){
+ body{max-width:1280px;margin:0 auto}
+ #t1{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+ #t1res{order:1;position:sticky;top:8px;max-height:calc(100vh - 16px);overflow:auto}
+ #t1in{order:2}
+ #t1res .wideonly{display:block}
+}
 </style>
 </head>
 <body>
 <div class="tabs"><button class="tab on" data-t="t1">🧭 Расчёт поправки компаса</button><button class="tab" data-t="t2">🚢 Время в пути</button><button class="tab" data-t="t3">🌊 Приливы</button><button class="tab" data-t="t4">📖 Таблицы ATT</button></div>
-<section id="t1">
+<section id="t1"><div id="t1in">
 
 <div class="card">
 <h2>Координаты</h2>
@@ -85,6 +93,7 @@ td.h{font-weight:700;color:var(--ac);padding-top:12px;text-align:left;border-bot
 <button id="calc">Рассчитать</button>
 </div>
 
+</div><div id="t1res"><div class="card wideonly" id="ph"><h2>Результат</h2><div class="note">Результат расчёта появится здесь. Введите данные справа и нажмите «Рассчитать».</div></div>
 <div class="card" id="out" hidden>
 <h2>Результат</h2>
 <div class="big" id="dk"></div>
@@ -95,6 +104,7 @@ td.h{font-weight:700;color:var(--ac);padding-top:12px;text-align:left;border-bot
 
 <div class="note">Данные МАЕ и МТ вычисляются внутри приложения теми же величинами, что в таблицах (GHA, Dec, d, SHA, SD, ур. времени, амплитуда, рефракция, параллакс, наклонение). Солнце ≈ ±0,01°. Звёзды: координаты J2000 + собственное движение, прецессия, нутация и аберрация — SHA и Dec считаются на любую дату. Для ответственных случаев сверяйте с печатным МАЕ. Луна и планеты не включены.</div>
 
+</div>
 </section>
 
 <section id="t2" hidden>
@@ -193,6 +203,7 @@ td.h{font-weight:700;color:var(--ac);padding-top:12px;text-align:left;border-bot
 </div>
 <div class="note">Метод косинусоиды (как в таблицах приливов Адмиралтейства): h = ½(h₁ + h₂) + ½(h₁ − h₂)·cos(π·t/Δ).</div>
 </div>
+<div class="card"><h2>График уровня воды</h2><div id="pch"></div><div class="note" id="pchn">График появится после получения прогноза (или после ввода ПВ и МВ в расчёте по таблицам).</div></div>
 </section>
 
 <section id="t4" hidden>
@@ -416,7 +427,7 @@ function calc(){
   if(h>60)w.push("Высота больше 60°: азимут меняется очень быстро, точность пеленга низкая.");
   if(kind==="mag")w.push("Для магнитного компаса ΔK — общая поправка (склонение + девиация).");
   $("warn").textContent=w.join(" ");
-  $("out").hidden=false;$("out").scrollIntoView({behavior:"smooth"});
+  $("out").hidden=false;$("ph").hidden=true;if(!window.matchMedia("(min-width:600px)").matches)$("out").scrollIntoView({behavior:"smooth"});
 }
 $("calc").onclick=calc;
 document.querySelectorAll(".tab").forEach(function(b){b.onclick=function(){
@@ -526,6 +537,9 @@ function renderTide(){
     var ms=s0+(+tt[0]*60+ +tt[1])*60000,h0=heightAt(ms),h1=heightAt(ms+600000);
     if(h0!=null){hh.textContent=sg(h0)+" м";hd.textContent=h1==null?"":(h1>h0?"вода прибывает":"вода убывает")+" · относительно среднего уровня моря"}
   }
+  var pts=[];for(var q=s0;q<=s1;q+=600000){var hq=heightAt(q);if(hq!=null)pts.push([q,hq])}
+  var cur=null;if(tt.length>=2){var cm=s0+(+tt[0]*60+ +tt[1])*60000,ch=heightAt(cm);if(ch!=null)cur=[cm,ch]}
+  setChart(chartSVG(pts,rows,cur,z,s0,s1,{lab:days<=2?2:days<=3?1:0}),"Время в выбранном поясе, высота от среднего уровня моря. Красные точки: ПВ, зелёные: МВ, зелёный пунктир: выбранный момент.");
   $("pout").hidden=false;
 }
 ["pdate","pdays","ptime","pzn","pzs"].forEach(function(id){$(id).addEventListener("input",renderTide);$(id).addEventListener("change",renderTide)});
@@ -541,6 +555,9 @@ function mcalc(){
   if(!isNaN(tx)){var t=((tx-t1)%24+24)%24;if(t>D)msg.push("Момент вне интервала между введёнными событиями.");else $("mh").textContent=sg(Hm+A*Math.cos(Math.PI*t/D))+" м"}
   if(!isNaN(hx)){var c=(hx-Hm)/A;if(Math.abs(c)>1)msg.push("Нужная высота вне диапазона между событиями.");else $("mtm").textContent=hm(t1+D/Math.PI*Math.acos(c))}
   e.textContent=msg.join(" ");
+  if(!TD){var g0=t1*3600000,g1=(t1+D)*3600000,gp=[];for(var q=0;q<=80;q++)gp.push([g0+(g1-g0)*q/80,Hm+A*Math.cos(Math.PI*q/80)]);
+    var gc=null;if(!isNaN(tx)){var tq=((tx-t1)%24+24)%24;if(tq<=D)gc=[g0+tq*3600000,Hm+A*Math.cos(Math.PI*tq/D)]}
+    setChart(chartSVG(gp,[[g0,h1>h2,h1],[g1,h1<=h2,h2]],gc,0,g0,g1,{lab:2,noDate:true}),"График по введённым ПВ и МВ (косинусоида). Красная точка: ПВ, зелёная: МВ.")}
   $("mout").hidden=false;
 }
 ["m1t","m1h","m2t","m2h","mxt","mxh"].forEach(function(id){$(id).addEventListener("input",mcalc);$(id).addEventListener("change",mcalc)});
@@ -605,6 +622,42 @@ $("aex").onclick=function(){
   var v={amode:"sec",eht:"12:40",ehh:"4.7",elt:"18:55",elh:"1.0",sa1:"5.0",sa2:"3.9",sa3:"1.6",sa4:"0.6",hra:"02:00",hrad:"+0020",hrb:"08:00",hrbd:"+0040",lra:"05:00",lrad:"+0015",lrb:"11:00",lrbd:"+0035",d1:"-0.4",d2:"-0.3",d3:"-0.1",d4:"-0.1",zc:"0",atx:"15:30",adraft:"5.2",adepth:"3.0",amargin:"0.5",abridge:"12",aship:"9"};
   for(var k in v)$(k).value=v[k];acalc();
 };
+
+function niceStep(x){var p=Math.pow(10,Math.floor(Math.log(x)/Math.LN10)),f=x/p;return (f<1.5?1:f<3.5?2:f<7.5?5:10)*p}
+function setChart(svg,note){$("pch").innerHTML=svg;$("pchn").textContent=note}
+function chartSVG(pts,ext,cur,z,s0,s1,o){
+  if(!pts.length)return "";
+  var W=720,H=300,l=46,r=14,tp=26,b=40,iw=W-l-r,ih=H-tp-b,span=(s1-s0)/3600000,zz=z*3600000;
+  var ys=pts.map(function(p){return p[1]}).concat([0]),mn=Math.min.apply(null,ys),mx=Math.max.apply(null,ys),pp=(mx-mn)*0.14||0.5;mn-=pp;mx+=pp;
+  function X(ms){return l+(ms-s0)/(s1-s0)*iw}
+  function Y(v){return tp+(mx-v)/(mx-mn)*ih}
+  function hh(ms){var d=new Date(ms+zz);return pad(d.getUTCHours(),2)+":"+pad(d.getUTCMinutes(),2)}
+  var g="",st=niceStep((mx-mn)/5),v,vv,k;
+  for(v=Math.ceil(mn/st)*st;v<=mx+1e-9;v+=st){vv=Math.round(v/st)*st;var yy=Y(vv).toFixed(1);g+="<line x1='"+l+"' x2='"+(W-r)+"' y1='"+yy+"' y2='"+yy+"' style='stroke:var(--bd)'/><text x='"+(l-6)+"' y='"+(+yy+4)+"' text-anchor='end' style='fill:var(--mut)'>"+vv.toFixed(1)+"</text>"}
+  var tick=span<=10?1:span<=30?3:span<=54?6:24,tm=tick*3600000;
+  for(k=Math.ceil((s0+zz)/tm)*tm-zz;k<=s1+1;k+=tm){
+    var xx=X(k).toFixed(1),lc=new Date(k+zz),mid=lc.getUTCHours()===0&&lc.getUTCMinutes()===0,dt=pad(lc.getUTCDate(),2)+"."+pad(lc.getUTCMonth()+1,2);
+    g+="<line x1='"+xx+"' x2='"+xx+"' y1='"+tp+"' y2='"+(H-b)+"' style='stroke:var(--bd);"+(mid&&!o.noDate?"stroke-width:2":"stroke-opacity:.5")+"'/>";
+    g+="<text x='"+xx+"' y='"+(H-b+15)+"' text-anchor='middle' style='fill:var(--mut)'>"+(tick>=24?dt:hh(k))+"</text>";
+    if(mid&&tick<24&&!o.noDate)g+="<text x='"+xx+"' y='"+(H-b+30)+"' text-anchor='middle' style='fill:var(--tx);font-weight:700'>"+dt+"</text>";
+  }
+  var y0=Y(0).toFixed(1);
+  g+="<line x1='"+l+"' x2='"+(W-r)+"' y1='"+y0+"' y2='"+y0+"' style='stroke:var(--mut);stroke-dasharray:5 4'/>";
+  var d="";pts.forEach(function(p,i){d+=(i?"L":"M")+X(p[0]).toFixed(1)+" "+Y(p[1]).toFixed(1)+" "});
+  g+="<path d='"+d+"' style='fill:none;stroke:var(--ac);stroke-width:2.5;stroke-linejoin:round'/>";
+  ext.forEach(function(e){
+    if(e[0]<s0||e[0]>s1)return;
+    var cx=X(e[0]).toFixed(1),cy=Y(e[2]);
+    g+="<circle cx='"+cx+"' cy='"+cy.toFixed(1)+"' r='4.5' style='fill:"+(e[1]?"#e5484d":"#2f9e6a")+"'/>";
+    if(o.lab)g+="<text x='"+cx+"' y='"+(e[1]?cy-9:cy+17).toFixed(1)+"' text-anchor='middle' style='fill:var(--tx);font-size:10px'>"+(o.lab>=2?hh(e[0])+" ":"")+sg(e[2])+"</text>";
+  });
+  if(cur&&cur[0]>=s0&&cur[0]<=s1){
+    var cx2=X(cur[0]).toFixed(1);
+    g+="<line x1='"+cx2+"' x2='"+cx2+"' y1='"+tp+"' y2='"+(H-b)+"' style='stroke:var(--ok);stroke-width:2;stroke-dasharray:6 4'/><circle cx='"+cx2+"' cy='"+Y(cur[1]).toFixed(1)+"' r='5' style='fill:var(--ok)'/><text x='"+cx2+"' y='"+(tp-8)+"' text-anchor='middle' style='fill:var(--ok);font-weight:700'>"+hh(cur[0])+" · "+sg(cur[1])+" м</text>";
+  }
+  g+="<text x='"+(l-6)+"' y='"+(tp-10)+"' text-anchor='end' style='fill:var(--mut)'>м</text>";
+  return "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 "+W+" "+H+"' style='width:100%;height:auto;display:block;font:11px system-ui,sans-serif'>"+g+"</svg>";
+}
 </script>
 </body>
 </html>
