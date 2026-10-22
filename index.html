@@ -52,7 +52,7 @@ input::-webkit-calendar-picker-indicator{opacity:1;cursor:pointer}
 </style>
 </head>
 <body>
-<div class="tabs"><button class="tab on" data-t="t1">🧭 Расчёт поправки компаса</button><button class="tab" data-t="t2">🚢 Время в пути</button><button class="tab" data-t="t3">🌊 Приливы</button><button class="tab" data-t="t4">📖 Таблицы ATT</button></div>
+<div class="tabs"><button class="tab on" data-t="t1">🧭 Расчёт поправки компаса</button><button class="tab" data-t="t2">🚢 Время в пути</button><button class="tab" data-t="t3">🌊 Приливы</button><button class="tab" data-t="t4">📖 Таблицы ATT</button><button class="tab" data-t="t5">⚖️ Расчёт метацентрической высоты по периоду качки</button></div>
 <section id="t1"><div id="t1in">
 
 <div class="card">
@@ -280,6 +280,69 @@ input::-webkit-calendar-picker-indicator{opacity:1;cursor:pointer}
 <div class="note">Метод ATT: разности времени интерполируются по времени ПВ/МВ основного порта (период 12 ч), разности высот по высоте воды основного порта между сизигией и квадратурой; высота в промежуточный момент считается по косинусоиде. Печатные приливные кривые ATT для конкретных портов могут отличаться на несколько дециметров. Заметно точнее ручные расчёты по приливным кривым из таблиц.</div>
 </section>
 
+<section id="t5" hidden>
+<div class="card">
+<h2>Судно (профиль)</h2>
+<label>Название судна</label><input id="gname">
+<div class="row">
+<div><label>Ширина B, м</label><input id="gB" inputmode="decimal"></div>
+<div><label>Длина L, м</label><input id="gL" inputmode="decimal"></div>
+</div>
+<div class="row">
+<div><label>Средняя осадка d, м</label><input id="gd" inputmode="decimal"></div>
+<div><label>Мин. допустимая h, м</label><input id="gmin" inputmode="decimal" placeholder="необязательно"></div>
+</div>
+<div class="note">L и d нужны только для расчёта коэффициента C по размерам судна.</div>
+<button class="sec" id="gsave">💾 Сохранить профиль судна</button>
+<div class="note" id="gpm"></div>
+</div>
+<div class="card">
+<h2>Период качки T</h2>
+<select id="gtm"><option value="direct">Ввести период T, с</option><option value="meas">Рассчитать по замеру: T = Δt / n</option></select>
+<div id="gdirect"><label>Период T, с</label><input id="gT" inputmode="decimal"></div>
+<div id="gmeas" hidden>
+<div class="row">
+<div><label>Общее время Δt, с</label><input id="gdt" inputmode="decimal"></div>
+<div><label>Число полных колебаний n</label><input id="gn" inputmode="numeric"></div>
+</div>
+<button class="sec" id="gsw">▶ Секундомер: старт</button>
+<div class="note">Нажмите «старт» в крайнем положении борта и «стоп» после n полных колебаний, затем введите n.</div>
+<div class="note" id="gts"></div>
+</div>
+<div class="note">Полное колебание: от крайнего положения борта до того же положения. Для точности замеряйте 5–10 колебаний и берите среднее.</div>
+</div>
+<div class="card">
+<h2>Коэффициент C</h2>
+<select id="gcm"><option value="ref">Из справочника</option><option value="man">Ввести известное значение</option><option value="calc">Расчёт по размерам судна</option></select>
+<div id="gcref"><select id="gref" style="margin-top:8px"><option value="0.88">Каботажные суда (в балласте): 0,88</option><option value="0.80">Промысловые суда (открытое море): 0,80</option><option value="0.95">Промысловые суда (прибрежный лов): 0,95</option><option value="0.62-1.00">Транспортные суда (в грузу): 0,62–1,00</option></select></div>
+<div id="gcman" hidden><label>C из судовой документации (получено при креновании)</label><input id="gc" inputmode="decimal"></div>
+<div id="gccalc" hidden class="note">C = 0,7487 + 0,0456·(B/d) − 0,000864·L. Нужны B, d и L из профиля судна.</div>
+</div>
+<div class="note err" id="gerr"></div>
+<div class="card" id="gout" hidden>
+<h2>Результат</h2>
+<div class="lbl">Поперечная метацентрическая высота h</div><div class="big2" id="gh"></div>
+<div class="note" id="gst" style="text-align:center"></div>
+<table id="gtb"></table>
+<div class="note" id="gw"></div>
+</div>
+<div class="card">
+<h2>Осадка при крене</h2>
+<label>Угол крена θ, градусы</label>
+<input id="kth" inputmode="decimal" placeholder="например 5">
+<div class="note">Ширина B и осадка d берутся из профиля судна выше.</div>
+<div class="note err" id="kerr"></div>
+<div id="kout" hidden>
+<div class="lbl">Приращение осадки Δd</div><div class="big2" id="kdd"></div>
+<div class="lbl">Осадка с учётом крена d + Δd</div><div class="big2" id="kdr"></div>
+<table id="ktb"></table>
+<div class="note" id="kw"></div>
+</div>
+<div class="note">Δd = (B / 2) · sin θ. Это приближённая оценка для малых углов (обычно до 10°). Она предполагает простую, близкую к прямоугольной форму подводной части. У судов со сложными обводами (особенно в носу и корме) реальное приращение может отличаться. Формула не учитывает другие изменения осадки, например проседание на мелководье.</div>
+</div>
+<div class="note">Капитанская формула: h = (C·B/T)². Это приближённая оценка. Она не заменяет информацию об остойчивости судна и кренование. Значения C в справочнике ориентировочные: сверяйте с документацией судна.</div>
+</section>
+
 <script>
 var D=Math.PI/180;
 var ST=[["Alpheratz",0,8,23.26,29,5,25.6,135.68,-162.95],["Ankaa",0,26,17.05,-42,18,21.5,232.76,-353.64],["Schedar",0,40,30.44,56,32,14.4,50.36,-32.17],["Diphda",0,43,35.37,-17,59,11.8,232.79,32.71],["Achernar",1,37,42.85,-57,14,12.3,87.0,-38.2],["Hamal",2,7,10.41,23,27,44.7,190.73,-145.77],["Acamar",2,58,15.68,-40,18,17.0,-53,20],["Menkar",3,2,16.77,4,5,23.6,-11.81,-78.76],["Mirfak",3,24,19.37,49,51,40.2,23.75,-26.23],["Aldebaran",4,35,55.24,16,30,33.5,62.78,-189.36],["Rigel",5,14,32.27,-8,12,5.9,1.31,0.50],["Capella",5,16,41.36,45,59,52.8,75.52,-427.13],["Bellatrix",5,25,7.86,6,20,58.9,-8.75,-13.28],["Elnath",5,26,17.51,28,36,26.8,23.28,-174.22],["Alnilam",5,36,12.81,-1,12,6.9,1.49,-1.06],["Betelgeuse",5,55,10.31,7,24,25.4,27.54,11.30],["Canopus",6,23,57.11,-52,41,44.4,19.93,23.24],["Sirius",6,45,8.92,-16,42,58.0,-546.01,-1223.07],["Adhara",6,58,37.55,-28,58,19.5,2.63,2.29],["Procyon",7,39,18.12,5,13,30.0,-714.59,-1036.80],["Pollux",7,45,18.95,28,1,34.3,-625.69,-45.95],["Avior",8,22,30.84,-59,30,34.1,-25.34,22.72],["Suhail",9,7,59.76,-43,25,57.3,-23.21,14.28],["Miaplacidus",9,13,11.98,-69,43,1.9,-157.66,108.91],["Alphard",9,27,35.24,-8,39,31.2,-14.49,33.25],["Regulus",10,8,22.31,11,58,2.0,-249.40,4.91],["Dubhe",11,3,43.67,61,45,3.7,-136.46,-35.25],["Denebola",11,49,3.58,14,34,19.4,-499.02,-113.78],["Gienah",12,15,48.37,-17,32,30.9,-158.61,-21.86],["Acrux",12,26,35.90,-63,5,56.7,-35.83,-14.86],["Gacrux",12,31,9.96,-57,6,47.6,27.94,-264.33],["Alioth",12,54,1.75,55,57,35.4,111.91,-8.24],["Spica",13,25,11.58,-11,9,40.8,-42.35,-30.67],["Alkaid",13,47,32.44,49,18,47.8,-121.23,-15.56],["Hadar",14,3,49.41,-60,22,22.9,-33.27,-23.16],["Menkent",14,6,40.95,-36,22,11.8,-519.29,-517.87],["Arcturus",14,15,39.67,19,10,56.7,-1093.39,-2000.06],["Rigil Kent.",14,39,36.49,-60,50,2.4,-3679.25,473.67],["Zubenelgenubi",14,50,52.71,-16,2,30.4,-105.69,-69.00],["Kochab",14,50,42.33,74,9,19.8,-32.29,11.91],["Alphecca",15,34,41.27,26,42,52.9,120.38,-89.44],["Antares",16,29,24.46,-26,25,55.2,-10.16,-23.21],["Atria",16,48,39.90,-69,1,39.8,17.85,-32.92],["Sabik",17,10,22.69,-15,43,29.7,41.16,97.65],["Shaula",17,33,36.52,-37,6,13.8,-8.90,-29.95],["Rasalhague",17,34,56.07,12,33,36.1,110.08,-222.61],["Eltanin",17,56,36.37,51,29,20.0,-8.52,-23.05],["Kaus Austr.",18,24,10.32,-34,23,4.6,-39.61,-124.05],["Vega",18,36,56.34,38,47,1.3,200.94,286.23],["Nunki",18,55,15.93,-26,17,48.2,13.87,-52.65],["Altair",19,50,47.00,8,52,6.0,536.82,385.54],["Peacock",20,25,38.86,-56,44,6.3,7.71,-86.15],["Deneb",20,41,25.92,45,16,49.2,1.56,1.55],["Enif",21,44,11.16,9,52,30.0,30.02,1.38],["Al Na\u2019ir",22,8,13.98,-46,57,39.5,127.60,-147.91],["Fomalhaut",22,57,39.05,-29,37,20.1,329.22,-164.22],["Markab",23,4,45.65,15,12,18.9,61.10,-42.56],["Polaris",2,31,49.09,89,15,50.8,44.48,-11.85]];
@@ -434,7 +497,7 @@ function calc(){
 $("calc").onclick=calc;
 document.querySelectorAll(".tab").forEach(function(b){b.onclick=function(){
   document.querySelectorAll(".tab").forEach(function(x){x.classList.toggle("on",x===b)});
-  ["t1","t2","t3","t4"].forEach(function(id){$(id).hidden=b.dataset.t!==id});
+  ["t1","t2","t3","t4","t5"].forEach(function(id){$(id).hidden=b.dataset.t!==id});
 }});
 ["tzn","azn"].forEach(function(id){var h="";for(var i=0;i<=12;i++)h+="<option value=\""+i+"\">"+i+"</option>";$(id).innerHTML=h});
 (function(){var d=new Date(),o=-d.getTimezoneOffset()/60;
@@ -660,6 +723,69 @@ function chartSVG(pts,ext,cur,z,s0,s1,o){
   g+="<text x='"+(l-6)+"' y='"+(tp-10)+"' text-anchor='end' style='fill:var(--mut)'>м</text>";
   return "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 "+W+" "+H+"' style='width:100%;height:auto;display:block;font:11px system-ui,sans-serif'>"+g+"</svg>";
 }
+
+function gC(B,e){
+  var m=$("gcm").value;
+  if(m==="ref")return $("gref").value.split("-").map(Number);
+  if(m==="man"){var c=n($("gc").value);if(isNaN(c)||c<=0){e.textContent="Введите коэффициент C.";return null}return [c]}
+  var d=n($("gd").value),L=n($("gL").value);
+  if(isNaN(d)||isNaN(L)||d<=0||L<=0){e.textContent="Для расчёта C введите среднюю осадку d и длину L.";return null}
+  return [0.7487+0.0456*(B/d)-0.000864*L];
+}
+function gcalc(){
+  var e=$("gerr"),w=[];e.textContent="";$("gout").hidden=true;
+  $("gdirect").hidden=$("gtm").value!=="direct";$("gmeas").hidden=$("gtm").value!=="meas";
+  $("gcref").hidden=$("gcm").value!=="ref";$("gcman").hidden=$("gcm").value!=="man";$("gccalc").hidden=$("gcm").value!=="calc";
+  var B=n($("gB").value),T;
+  if($("gtm").value==="meas"){
+    var dt=n($("gdt").value),k=n($("gn").value);
+    if(isNaN(dt)||isNaN(k)||k<1){$("gts").textContent="";return}
+    T=dt/k;$("gts").textContent="T = Δt / n = "+T.toFixed(2)+" с";
+    if(k<5)w.push("Замерено меньше 5 колебаний: точность низкая.");
+  }else T=n($("gT").value);
+  if(isNaN(T)||isNaN(B))return;
+  if(T<=0||B<=0){e.textContent="T и B должны быть больше нуля.";return}
+  var cs=gC(B,e);if(!cs)return;
+  function H(c,t){return Math.pow(c*B/t,2)}
+  var hs=cs.map(function(c){return H(c,T)}),lo=Math.min.apply(null,hs),hi=Math.max.apply(null,hs),cm=(Math.min.apply(null,cs)+Math.max.apply(null,cs))/2;
+  $("gh").textContent=(hs.length>1?lo.toFixed(2)+" – "+hi.toFixed(2):lo.toFixed(2))+" м";
+  var gmin=n($("gmin").value),st="";
+  if(!isNaN(gmin)){st=lo>=gmin?"h не ниже допустимой ("+gmin.toFixed(2)+" м)":hi<gmin?"h НИЖЕ допустимой ("+gmin.toFixed(2)+" м)":"По диапазону C нельзя однозначно сравнить с допустимой h ("+gmin.toFixed(2)+" м)"}
+  $("gst").textContent=st;
+  var rows=[["Период T",T.toFixed(2)+" с"],["Ширина B",B.toFixed(2)+" м"],["Коэффициент C",cs.length>1?cs[0].toFixed(2)+" – "+cs[1].toFixed(2):cs[0].toFixed(3)]];
+  if(T>0.5)rows.push(["При T ± 0,5 с (C = "+cm.toFixed(2)+")",H(cm,T+0.5).toFixed(2)+" – "+H(cm,T-0.5).toFixed(2)+" м"]);
+  $("gtb").innerHTML=rows.map(function(r){return "<tr><td>"+r[0]+"</td><td>"+r[1]+"</td></tr>"}).join("");
+  if(lo<0.15)w.push("h меньше 0,15 м: проверьте замер и коэффициент. Остойчивость может быть недостаточной, сверьтесь с информацией об остойчивости судна.");
+  if(T<3)w.push("Очень малый период: проверьте замер.");
+  if(T>25)w.push("Очень большой период: проверьте замер, остойчивость может быть мала.");
+  $("gw").textContent=w.join(" ");$("gout").hidden=false;
+}
+["gname","gB","gL","gd","gmin","gtm","gT","gdt","gn","gcm","gref","gc"].forEach(function(id){$(id).addEventListener("input",gcalc);$(id).addEventListener("change",gcalc)});
+$("gsave").onclick=function(){try{localStorage.setItem("vessel_profile",JSON.stringify({name:$("gname").value,B:$("gB").value,L:$("gL").value,d:$("gd").value,min:$("gmin").value}));$("gpm").textContent="Профиль сохранён на этом устройстве."}catch(x){$("gpm").textContent="Не удалось сохранить профиль в этом окне."}};
+(function(){try{var p=JSON.parse(localStorage.getItem("vessel_profile")||"null");if(p){$("gname").value=p.name||"";$("gB").value=p.B||"";$("gL").value=p.L||"";$("gd").value=p.d||"";$("gmin").value=p.min||"";$("gpm").textContent="Загружен профиль"+(p.name?": "+p.name:"")+"."}}catch(x){}})();
+var swT=null,swS=0;
+$("gsw").onclick=function(){
+  if(swT===null){swS=Date.now();$("gsw").textContent="■ Стоп · 0.0 с";swT=setInterval(function(){$("gsw").textContent="■ Стоп · "+((Date.now()-swS)/1000).toFixed(1)+" с"},100)}
+  else{clearInterval(swT);swT=null;$("gdt").value=((Date.now()-swS)/1000).toFixed(1);$("gsw").textContent="▶ Секундомер: старт";gcalc()}
+};
+
+function kcalc(){
+  var e=$("kerr"),w=[];e.textContent="";$("kout").hidden=true;
+  var B=n($("gB").value),th=n($("kth").value),d=n($("gd").value);
+  if(isNaN(th)||isNaN(B))return;
+  if(B<=0){e.textContent="Введите ширину судна B в профиле.";return}
+  th=Math.abs(th);
+  if(th>=90){e.textContent="Угол крена должен быть меньше 90°.";return}
+  var dd=B/2*Math.sin(th*Math.PI/180);
+  $("kdd").textContent="+"+dd.toFixed(2)+" м";
+  var rows=[["Ширина B",B.toFixed(2)+" м"],["Угол крена θ",th.toFixed(1)+"°"]];
+  if(!isNaN(d)&&d>0){$("kdr").textContent=(d+dd).toFixed(2)+" м";rows.push(["Осадка прямая d",d.toFixed(2)+" м"])}
+  else{$("kdr").textContent="—";w.push("Введите среднюю осадку d в профиле, чтобы получить итоговую осадку.")}
+  $("ktb").innerHTML=rows.map(function(r){return "<tr><td>"+r[0]+"</td><td>"+r[1]+"</td></tr>"}).join("");
+  if(th>10)w.push("Формула приближённая: для углов больше 10° погрешность растёт.");
+  $("kw").textContent=w.join(" ");$("kout").hidden=false;
+}
+["gB","gd","kth"].forEach(function(id){$(id).addEventListener("input",kcalc);$(id).addEventListener("change",kcalc)});
 </script>
 </body>
 </html>
