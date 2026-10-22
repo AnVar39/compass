@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Расчёт поправки компаса</title>
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--tx:#14202e;--mut:#5d6b7c;--ac:#0b63c5;--bd:#d5dce5;--ok:#0a7a45;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1621;--card:#17212f;--tx:#e8eef6;--mut:#93a2b5;--ac:#5aa6ff;--bd:#2b394b;--ok:#4cd391}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,Roboto,sans-serif;padding:12px}
+h1{font-size:20px;margin:4px 0 12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px}
+.card h2{font-size:14px;margin:0 0 8px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+label{display:block;font-size:13px;color:var(--mut);margin:8px 0 2px}
+input,select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font-size:16px}
+.row{display:flex;gap:8px}.row>div{flex:1;min-width:0}
+.c3{display:flex;gap:6px}.c3 input{flex:1.2}.c3 select{flex:1;padding-left:6px;padding-right:2px}
+button{width:100%;padding:12px;border:0;border-radius:10px;background:var(--ac);color:#fff;font-size:16px;font-weight:600;margin-top:10px}
+button.sec{background:transparent;color:var(--ac);border:1px solid var(--ac)}
+table{width:100%;border-collapse:collapse}td{padding:5px 0;border-bottom:1px solid var(--bd);vertical-align:top}td:last-child{text-align:right;font-variant-numeric:tabular-nums;padding-left:8px}
+td.h{font-weight:700;color:var(--ac);padding-top:12px;text-align:left;border-bottom:2px solid var(--ac)}
+.big{font-size:28px;font-weight:700;color:var(--ok);text-align:center;margin:6px 0}
+.note{font-size:13px;color:var(--mut);margin-top:6px}
+.err{color:#d33}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tab{margin:0;padding:10px 6px;background:var(--card);color:var(--tx);border:1px solid var(--bd);font-size:14px}
+.lbl{font-size:12px;color:var(--mut);text-align:center;text-transform:uppercase;letter-spacing:.05em}
+.big2{font-size:34px;font-weight:800;color:var(--ok);text-align:center;margin:2px 0 14px;line-height:1.15}
+.tab.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="tabs"><button class="tab on" data-t="t1">🧭 Расчёт поправки компаса</button><button class="tab" data-t="t2">🚢 Время в пути</button></div>
+<section id="t1">
+
+<div class="card">
+<h2>Координаты</h2>
+<label>Широта φ: градусы, минуты и десятые, N/S</label>
+<div class="c3"><input id="lad" inputmode="numeric" placeholder="град"><input id="lam" inputmode="decimal" placeholder="мин.м"><select id="las"><option>N</option><option>S</option></select></div>
+<label>Долгота λ: градусы, минуты и десятые, E/W</label>
+<div class="c3"><input id="lod" inputmode="numeric" placeholder="град"><input id="lom" inputmode="decimal" placeholder="мин.м"><select id="los"><option>E</option><option>W</option></select></div>
+<button class="sec" id="gps">📍 Взять координаты с GPS</button>
+<div class="note" id="gpsmsg"></div>
+</div>
+
+<div class="card">
+<h2>Дата</h2>
+<input id="date" type="date">
+</div>
+
+<div class="card">
+<h2>Время</h2>
+<div class="row">
+<div><label>Время по часам</label><input id="time" type="time" step="1"></div>
+<div><label>Часовой пояс, E/W</label><div class="c3"><input id="zn" inputmode="decimal" placeholder="№"><select id="zs"><option>E</option><option>W</option></select></div></div>
+</div>
+<button class="sec" id="now">🕒 Текущие дата и время устройства</button>
+<div class="note">Пояс E: UTC = время − №; пояс W: UTC = время + №.</div>
+</div>
+
+<div class="card">
+<h2>Наблюдение</h2>
+<label>Светило</label>
+<select id="body"></select>
+<label>Измеренный компасный пеленг КП (0–360°)</label>
+<input id="kp" inputmode="decimal" placeholder="например 98.5">
+<div class="row">
+<div><label>Тип компаса</label><select id="ctype"><option value="mag">Магнитный</option><option value="gyro">Гирокомпас</option></select></div>
+<div><label>Магн. склонение d (E +), необяз.</label><input id="var" inputmode="decimal"></div>
+</div>
+<label>Высота глаза над водой, м (необяз.)</label>
+<input id="eye" inputmode="decimal" placeholder="для наклонения горизонта">
+<button id="calc">Рассчитать</button>
+</div>
+
+<div class="card" id="out" hidden>
+<h2>Результат</h2>
+<div class="big" id="dk"></div>
+<div class="note" id="dkl" style="text-align:center"></div>
+<table id="tb"></table>
+<div class="note" id="warn"></div>
+</div>
+
+<div class="note">Данные МАЕ и МТ вычисляются внутри приложения теми же величинами, что в таблицах (GHA, Dec, d, SHA, SD, ур. времени, амплитуда, рефракция, параллакс, наклонение). Солнце ≈ ±0,01°. Звёзды: координаты J2000 + собственное движение, прецессия, нутация и аберрация — SHA и Dec считаются на любую дату. Для ответственных случаев сверяйте с печатным МАЕ. Луна и планеты не включены.</div>
+
+</section>
+
+<section id="t2" hidden>
+<div class="card">
+<h2>Отход</h2>
+<label>Дата отхода (местная)</label>
+<input id="tdate" type="date">
+<div class="row">
+<div><label>Время отхода (местное)</label><input id="ttime" type="time"></div>
+<div><label>Часовой пояс, E/W</label><div class="c3"><select id="tzn"></select><select id="tzs"><option>E</option><option>W</option></select></div></div>
+</div>
+</div>
+<div class="card">
+<h2>Приход</h2>
+<label>Дата прихода (местная)</label>
+<input id="sdate" type="date">
+<div class="row">
+<div><label>Время прихода (местное)</label><input id="stime" type="time"></div>
+<div><label>Часовой пояс порта прихода, E/W</label><div class="c3"><select id="azn"></select><select id="azs"><option>E</option><option>W</option></select></div></div>
+</div>
+</div>
+<div class="card">
+<h2>Переход</h2>
+<div class="row">
+<div><label>Расстояние, мили</label><input id="dist" inputmode="decimal" placeholder="500"></div>
+<div><label>Скорость, узлы</label><input id="spd" inputmode="decimal" placeholder="12"></div>
+</div>
+<div class="note">Расчёт идёт автоматически. Заданы дата и время прихода: считается скорость. Дата прихода не задана, но есть скорость: считается ETA.</div>
+<div class="note err" id="terr"></div>
+</div>
+<div class="card" id="tout" hidden>
+<h2 id="thead">Результат</h2>
+<div id="sblk"><div class="lbl">Требуемая скорость</div><div class="big2" id="tspd"></div></div>
+<div class="lbl">Время в пути</div><div class="big2" id="tdur"></div>
+<div class="lbl">Дата прибытия</div><div class="big2" id="tadate"></div>
+<div class="lbl">Время прибытия (местное)</div><div class="big2" id="tatime"></div>
+<table id="ttb"></table>
+<div class="note" id="twarn"></div>
+</div>
+<div class="note">Все расчёты идут через UTC. Пояс E: UTC = местное − №; пояс W: UTC = местное + №. Летнее время не учитывается — введите фактический пояс судового времени.</div>
+</section>
+
+<script>
+var D=Math.PI/180;
+var ST=[["Alpheratz",0,8,23.26,29,5,25.6,135.68,-162.95],["Ankaa",0,26,17.05,-42,18,21.5,232.76,-353.64],["Schedar",0,40,30.44,56,32,14.4,50.36,-32.17],["Diphda",0,43,35.37,-17,59,11.8,232.79,32.71],["Achernar",1,37,42.85,-57,14,12.3,87.0,-38.2],["Hamal",2,7,10.41,23,27,44.7,190.73,-145.77],["Acamar",2,58,15.68,-40,18,17.0,-53,20],["Menkar",3,2,16.77,4,5,23.6,-11.81,-78.76],["Mirfak",3,24,19.37,49,51,40.2,23.75,-26.23],["Aldebaran",4,35,55.24,16,30,33.5,62.78,-189.36],["Rigel",5,14,32.27,-8,12,5.9,1.31,0.50],["Capella",5,16,41.36,45,59,52.8,75.52,-427.13],["Bellatrix",5,25,7.86,6,20,58.9,-8.75,-13.28],["Elnath",5,26,17.51,28,36,26.8,23.28,-174.22],["Alnilam",5,36,12.81,-1,12,6.9,1.49,-1.06],["Betelgeuse",5,55,10.31,7,24,25.4,27.54,11.30],["Canopus",6,23,57.11,-52,41,44.4,19.93,23.24],["Sirius",6,45,8.92,-16,42,58.0,-546.01,-1223.07],["Adhara",6,58,37.55,-28,58,19.5,2.63,2.29],["Procyon",7,39,18.12,5,13,30.0,-714.59,-1036.80],["Pollux",7,45,18.95,28,1,34.3,-625.69,-45.95],["Avior",8,22,30.84,-59,30,34.1,-25.34,22.72],["Suhail",9,7,59.76,-43,25,57.3,-23.21,14.28],["Miaplacidus",9,13,11.98,-69,43,1.9,-157.66,108.91],["Alphard",9,27,35.24,-8,39,31.2,-14.49,33.25],["Regulus",10,8,22.31,11,58,2.0,-249.40,4.91],["Dubhe",11,3,43.67,61,45,3.7,-136.46,-35.25],["Denebola",11,49,3.58,14,34,19.4,-499.02,-113.78],["Gienah",12,15,48.37,-17,32,30.9,-158.61,-21.86],["Acrux",12,26,35.90,-63,5,56.7,-35.83,-14.86],["Gacrux",12,31,9.96,-57,6,47.6,27.94,-264.33],["Alioth",12,54,1.75,55,57,35.4,111.91,-8.24],["Spica",13,25,11.58,-11,9,40.8,-42.35,-30.67],["Alkaid",13,47,32.44,49,18,47.8,-121.23,-15.56],["Hadar",14,3,49.41,-60,22,22.9,-33.27,-23.16],["Menkent",14,6,40.95,-36,22,11.8,-519.29,-517.87],["Arcturus",14,15,39.67,19,10,56.7,-1093.39,-2000.06],["Rigil Kent.",14,39,36.49,-60,50,2.4,-3679.25,473.67],["Zubenelgenubi",14,50,52.71,-16,2,30.4,-105.69,-69.00],["Kochab",14,50,42.33,74,9,19.8,-32.29,11.91],["Alphecca",15,34,41.27,26,42,52.9,120.38,-89.44],["Antares",16,29,24.46,-26,25,55.2,-10.16,-23.21],["Atria",16,48,39.90,-69,1,39.8,17.85,-32.92],["Sabik",17,10,22.69,-15,43,29.7,41.16,97.65],["Shaula",17,33,36.52,-37,6,13.8,-8.90,-29.95],["Rasalhague",17,34,56.07,12,33,36.1,110.08,-222.61],["Eltanin",17,56,36.37,51,29,20.0,-8.52,-23.05],["Kaus Austr.",18,24,10.32,-34,23,4.6,-39.61,-124.05],["Vega",18,36,56.34,38,47,1.3,200.94,286.23],["Nunki",18,55,15.93,-26,17,48.2,13.87,-52.65],["Altair",19,50,47.00,8,52,6.0,536.82,385.54],["Peacock",20,25,38.86,-56,44,6.3,7.71,-86.15],["Deneb",20,41,25.92,45,16,49.2,1.56,1.55],["Enif",21,44,11.16,9,52,30.0,30.02,1.38],["Al Na\u2019ir",22,8,13.98,-46,57,39.5,127.60,-147.91],["Fomalhaut",22,57,39.05,-29,37,20.1,329.22,-164.22],["Markab",23,4,45.65,15,12,18.9,61.10,-42.56],["Polaris",2,31,49.09,89,15,50.8,44.48,-11.85]];
+function $(i){return document.getElementById(i)}
+$("body").innerHTML="<option value=\"sun\">Солнце (центр)</option>"+ST.map(function(s,i){return "<option value=\""+i+"\">"+(i<57?(i+1)+" ":"")+s[0]+"</option>"}).join("");
+function n(v){return parseFloat(String(v).replace(",","."))}
+function n360(x){x%=360;return x<0?x+360:x}
+function n180(x){x=n360(x);return x>180?x-360:x}
+function pad(x,l){return String(x).padStart(l,"0")}
+function dm(x){var s=x<0?"−":"";x=Math.abs(x);var d=Math.floor(x),m=Math.round((x-d)*600)/10;if(m>=60){d++;m=0}return s+d+"° "+m.toFixed(1)+"′"}
+function mn(x){return (x>=0?"+":"−")+Math.abs(x*60).toFixed(1)+"′"}
+function hm(h){h=((h%24)+24)%24;var m=Math.round(h*60);return pad(Math.floor(m/60)%24,2)+":"+pad(m%60,2)}
+function quad(a){a=n360(a);if(a<90)return "N "+a.toFixed(1)+"° E";if(a<180)return "S "+(180-a).toFixed(1)+"° E";if(a<270)return "S "+(a-180).toFixed(1)+"° W";return "N "+(360-a).toFixed(1)+"° W"}
+function setNow(){
+  var d=new Date();
+  $("date").value=d.getFullYear()+"-"+pad(d.getMonth()+1,2)+"-"+pad(d.getDate(),2);
+  $("time").value=pad(d.getHours(),2)+":"+pad(d.getMinutes(),2)+":"+pad(d.getSeconds(),2);
+  var o=-d.getTimezoneOffset()/60;$("zn").value=String(Math.abs(o));$("zs").value=o>=0?"E":"W";
+}
+setNow();$("now").onclick=setNow;
+function setC(p,v,pos,neg){var a=Math.abs(v),d=Math.floor(a),m=(a-d)*60;if(m>=59.95){d++;m=0}$(p+"d").value=d;$(p+"m").value=m.toFixed(1);$(p+"s").value=v>=0?pos:neg}
+function getC(p,pos){var d=n($(p+"d").value),m=n($(p+"m").value);if(isNaN(m))m=0;if(isNaN(d)||m<0||m>=60)return NaN;return (d+m/60)*($(p+"s").value===pos?1:-1)}
+$("gps").onclick=function(){
+  var m=$("gpsmsg");m.className="note";m.textContent="Определяю…";
+  if(!navigator.geolocation){m.className="note err";m.textContent="GPS недоступен — введите координаты вручную.";return}
+  navigator.geolocation.getCurrentPosition(function(p){
+    setC("la",p.coords.latitude,"N","S");setC("lo",p.coords.longitude,"E","W");
+    m.textContent="Готово, точность ≈ "+Math.round(p.coords.accuracy)+" м";
+  },function(e){m.className="note err";m.textContent="Не удалось получить GPS ("+e.message+"). Введите координаты вручную."},{enableHighAccuracy:true,timeout:15000});
+};
+function jdOf(ms){return ms/86400000+2440587.5}
+function gmst(ms){return n360(280.46061837+360.98564736629*(jdOf(ms)-2451545.0))}
+function sunAt(ms){
+  var t=jdOf(ms)-2451545.0,L=n360(280.460+0.9856474*t),g=n360(357.528+0.9856003*t)*D;
+  var lam=(L+1.915*Math.sin(g)+0.020*Math.sin(2*g))*D,eps=(23.439-0.0000004*t)*D;
+  var ra=n360(Math.atan2(Math.cos(eps)*Math.sin(lam),Math.cos(lam))/D);
+  var R=1.00014-0.01671*Math.cos(g)-0.00014*Math.cos(2*g);
+  return {lam:lam/D,ra:ra,dec:Math.asin(Math.sin(eps)*Math.sin(lam))/D,eot:4*n180(L-ra),sd:0.26664/R,gha:n360(gmst(ms)-ra)};
+}
+function starAt(ms,s){
+  var T=(jdOf(ms)-2451545.0)/36525,yr=T*100;
+  var dc=(Math.abs(s[4])+s[5]/60+s[6]/3600)*(s[4]<0?-1:1),cd=Math.cos(dc*D);
+  var a=(s[1]+s[2]/60+s[3]/3600)*15+s[7]*yr/3.6e6/cd,d=dc+s[8]*yr/3.6e6;
+  var Z=(2306.2181*T+0.30188*T*T+0.017998*T*T*T)/3600,ZZ=(2306.2181*T+1.09468*T*T+0.018203*T*T*T)/3600,TH=(2004.3109*T-0.42665*T*T-0.041833*T*T*T)/3600*D;
+  var ar=(a+Z)*D,dr=d*D;
+  var A=Math.cos(dr)*Math.sin(ar),B=Math.cos(TH)*Math.cos(dr)*Math.cos(ar)-Math.sin(TH)*Math.sin(dr),C=Math.sin(TH)*Math.cos(dr)*Math.cos(ar)+Math.cos(TH)*Math.sin(dr);
+  var ra=Math.atan2(A,B)/D+ZZ,de=Math.asin(C)/D;
+  var om=(125.04-1934.136*T)*D,Ls=(280.4665+36000.7698*T)*D;
+  var dpsi=(-17.20*Math.sin(om)-1.32*Math.sin(2*Ls))/3600,deps=(9.20*Math.cos(om)+0.57*Math.cos(2*Ls))/3600;
+  var ep=(23.4393-0.0130*T)*D,al=ra*D,dl=de*D,tn=Math.tan(dl);
+  var dA=(Math.cos(ep)+Math.sin(ep)*Math.sin(al)*tn)*dpsi-Math.cos(al)*tn*deps;
+  var dD=Math.sin(ep)*Math.cos(al)*dpsi+Math.sin(al)*deps;
+  var sl=sunAt(ms).lam*D,k=20.49552/3600;
+  dA+=-k*(Math.cos(al)*Math.cos(sl)*Math.cos(ep)+Math.sin(al)*Math.sin(sl))/Math.cos(dl);
+  dD+=-k*(Math.cos(sl)*Math.cos(ep)*(Math.tan(ep)*Math.cos(dl)-Math.sin(al)*Math.sin(dl))+Math.cos(al)*Math.sin(dl)*Math.sin(sl));
+  return {sha:n360(360-(ra+dA)),dec:de+dD,eq:dpsi*Math.cos(ep)};
+}
+function azAlt(lat,dec,lha){
+  var az=n360(Math.atan2(-Math.sin(lha*D),Math.tan(dec*D)*Math.cos(lat*D)-Math.sin(lat*D)*Math.cos(lha*D))/D);
+  var h=Math.asin(Math.sin(lat*D)*Math.sin(dec*D)+Math.cos(lat*D)*Math.cos(dec*D)*Math.cos(lha*D))/D;
+  return {az:az,h:h};
+}
+function refr(h){if(h<-1)return 0;return 1/Math.tan((h+7.31/(h+4.4))*D)/60}
+function calc(){
+  var lat=getC("la","N"),lon=getC("lo","E"),z=n($("zn").value),kp=n($("kp").value);
+  if(isNaN(lat)||isNaN(lon)||isNaN(z)||isNaN(kp)||!$("date").value||!$("time").value){alert("Заполните координаты, дату, время, часовой пояс и КП");return}
+  if(lat>90||lat<-90||lon>180||lon<-180){alert("Проверьте координаты");return}
+  var ds=$("date").value.split("-"),ts=$("time").value.split(":");
+  var tzh=($("zs").value==="E"?1:-1)*z;
+  var Y=+ds[0],M=+ds[1]-1,Dd=+ds[2];
+  var utc=Date.UTC(Y,M,Dd,+ts[0],+ts[1],+(ts[2]||0))-tzh*3600000;
+  var t0=Math.floor(utc/3600000)*3600000,u=new Date(utc),w=[];
+  var b=$("body").value,isSun=(b==="sun"),dec,gha,name,R=[];
+  R.push(["#","МАЕ — данные на момент наблюдения"]);
+  R.push(["Время UTC",u.getUTCFullYear()+"-"+pad(u.getUTCMonth()+1,2)+"-"+pad(u.getUTCDate(),2)+" "+pad(u.getUTCHours(),2)+":"+pad(u.getUTCMinutes(),2)+":"+pad(u.getUTCSeconds(),2)]);
+  R.push(["Ближайший целый час UTC",pad(new Date(t0).getUTCHours(),2)+":00"]);
+  var smin=(utc-t0)/60000;
+  var s0=sunAt(t0),s1=sunAt(t0+3600000),sn=sunAt(utc);
+  if(isSun){
+    var dh=s1.dec-s0.dec;
+    gha=sn.gha;dec=sn.dec;name="Солнце";
+    R.push(["GHA ☉ на целый час",dm(s0.gha)]);
+    R.push(["Приращение GHA за "+Math.floor(smin)+"м "+Math.round((smin%1)*60)+"с",dm(n360(sn.gha-s0.gha))]);
+    R.push(["GHA ☉",dm(gha)]);
+    R.push(["Dec ☉ на целый час",dm(s0.dec)]);
+    R.push(["d (изменение Dec за час)",mn(dh)]);
+    R.push(["Поправка к Dec (d·t)",mn(dh*smin/60)]);
+    R.push(["Dec ☉",dm(dec)]);
+    R.push(["Полудиаметр SD",(sn.sd*60).toFixed(1)+"′"]);
+    var e=sn.eot,es=Math.abs(e);
+    R.push(["Уравнение времени",(e>=0?"+":"−")+Math.floor(es)+"м "+Math.round((es%1)*60)+"с"]);
+  }else{
+    var s=ST[+b],st=starAt(utc,s),st0=starAt(t0,s);name=s[0];
+    var g0=n360(gmst(t0)+st0.eq),g1=n360(gmst(utc)+st.eq);
+    dec=st.dec;gha=n360(g1+st.sha);
+    R.push(["GHA ♈ на целый час",dm(g0)]);
+    R.push(["Приращение GHA ♈ за "+Math.floor(smin)+"м "+Math.round((smin%1)*60)+"с",dm(n360(g1-g0))]);
+    R.push(["GHA ♈",dm(g1)]);
+    R.push(["SHA звезды на дату",dm(st.sha)]);
+    R.push(["GHA звезды",dm(gha)]);
+    R.push(["Dec звезды на дату",dm(dec)]);
+  }
+  var lha=n360(gha+lon);
+  R.push(["LHA = GHA + λ",dm(lha)]);
+  var r=azAlt(lat,dec,lha),az=r.az,h=r.h;
+  var eye=n($("eye").value),dip=isNaN(eye)||eye<0?0:1.76*Math.sqrt(eye)/60;
+  R.push(["#","МТ — расчёт пеленга и поправок"]);
+  R.push(["Высота светила h (геом.)",dm(h)]);
+  R.push(["Истинный пеленг ИП (круговой)",az.toFixed(1)+"°"]);
+  R.push(["Азимут (четвертной)",quad(az)]);
+  var rf=refr(h);
+  R.push(["Рефракция ρ",(rf*60).toFixed(1)+"′"]);
+  if(isSun)R.push(["Горизонтальный параллакс (поправка)",(0.147*Math.cos(h*D)).toFixed(2)+"′"]);
+  if(dip>0)R.push(["Наклонение горизонта",(dip*60).toFixed(1)+"′"]);
+  if(isSun){
+    var x=Math.sin(dec*D)/Math.cos(lat*D);
+    if(Math.abs(x)<=1){
+      var am=Math.asin(x)/D,ab=Math.abs(am).toFixed(1),nm=am>=0?"N":"S";
+      var ipE=am>=0?90-am:90+Math.abs(am),ipW=360-ipE;
+      R.push(["Амплитуда (h = 0), sin A = sin δ / cos φ","E/W "+ab+"° "+nm]);
+      R.push(["ИП при восходе / заходе (h = 0)",ipE.toFixed(1)+"° / "+ipW.toFixed(1)+"°"]);
+    }
+    var h0=-(0.5667+dip),c=(Math.sin(h0*D)-Math.sin(lat*D)*Math.sin(dec*D))/(Math.cos(lat*D)*Math.cos(dec*D));
+    var tr=12-lon/15-sn.eot/60,tm=Date.UTC(Y,M,Dd)+tr*3600000,st=sunAt(tm);
+    tr=12-lon/15-st.eot/60;
+    var dT=st.dec,cz=(Math.sin(h0*D)-Math.sin(lat*D)*Math.sin(dT*D))/(Math.cos(lat*D)*Math.cos(dT*D));
+    R.push(["#","МАЕ — Солнце на дату (местное время по поясу)"]);
+    R.push(["Меридианный переход",hm(tr+tzh)]);
+    if(Math.abs(cz)<=1){
+      var Hh=Math.acos(cz)/D/15,Zr=Math.acos((Math.sin(dT*D)-Math.sin(lat*D)*Math.sin(h0*D))/(Math.cos(lat*D)*Math.cos(h0*D)))/D;
+      R.push(["Восход (центр на видимом горизонте)",hm(tr-Hh+tzh)]);
+      R.push(["Заход (центр на видимом горизонте)",hm(tr+Hh+tzh)]);
+      R.push(["ИП восхода / захода с рефракцией",Zr.toFixed(1)+"° / "+(360-Zr).toFixed(1)+"°"]);
+    }else R.push(["Восход/заход","нет (полярный день или ночь)"]);
+    if(Math.abs(h-h0)<1.5)w.push("Солнце у горизонта: режим восхода/захода применим.");
+  }
+  var dk=n180(az-kp),kind=$("ctype").value;
+  $("dk").textContent=(kind==="gyro"?"ΔГК = ":"ΔK = ")+(dk>=0?"+":"−")+Math.abs(dk).toFixed(1)+"°";
+  $("dkl").textContent=name+" · "+(dk>=0?"E (плюс)":"W (минус)")+" · ΔK = ИП − КП";
+  R.push(["#","Результат"]);
+  R.push(["ИП / КП",az.toFixed(1)+"° / "+kp.toFixed(1)+"°"]);
+  R.push([kind==="gyro"?"Поправка гирокомпаса ΔГК":"Общая поправка ΔK",(dk>=0?"+":"−")+Math.abs(dk).toFixed(1)+"°"]);
+  var v=n($("var").value);
+  if(kind==="mag"&&!isNaN(v)){var dv=dk-v;R.push(["Девиация δ = ΔK − d",(dv>=0?"+":"−")+Math.abs(dv).toFixed(1)+"°"])}
+  $("tb").innerHTML=R.map(function(r){return r[0]==="#"?"<tr><td class=\"h\" colspan=\"2\">"+r[1]+"</td></tr>":"<tr><td>"+r[0]+"</td><td>"+r[1]+"</td></tr>"}).join("");
+  if(h<-1)w.push("Светило под горизонтом ("+h.toFixed(1)+"°): проверьте дату, время и пояс.");
+  if(h>60)w.push("Высота больше 60°: азимут меняется очень быстро, точность пеленга низкая.");
+  if(kind==="mag")w.push("Для магнитного компаса ΔK — общая поправка (склонение + девиация).");
+  $("warn").textContent=w.join(" ");
+  $("out").hidden=false;$("out").scrollIntoView({behavior:"smooth"});
+}
+$("calc").onclick=calc;
+document.querySelectorAll(".tab").forEach(function(b){b.onclick=function(){
+  document.querySelectorAll(".tab").forEach(function(x){x.classList.toggle("on",x===b)});
+  $("t1").hidden=b.dataset.t!=="t1";$("t2").hidden=b.dataset.t!=="t2";
+}});
+["tzn","azn"].forEach(function(id){var h="";for(var i=0;i<=12;i++)h+="<option value=\""+i+"\">"+i+"</option>";$(id).innerHTML=h});
+(function(){var d=new Date(),o=-d.getTimezoneOffset()/60;
+  $("tdate").value=d.getFullYear()+"-"+pad(d.getMonth()+1,2)+"-"+pad(d.getDate(),2);
+  $("ttime").value=pad(d.getHours(),2)+":"+pad(d.getMinutes(),2);
+  $("tzn").value=$("azn").value=String(Math.min(12,Math.round(Math.abs(o))));$("tzs").value=$("azs").value=o>=0?"E":"W";})();
+function fmt(ms){var d=new Date(ms);return pad(d.getUTCDate(),2)+"."+pad(d.getUTCMonth()+1,2)+"."+d.getUTCFullYear()+" "+pad(d.getUTCHours(),2)+":"+pad(d.getUTCMinutes(),2)}
+function zl(z,sg){return z+" "+sg}
+function tcalc(){
+  var e=$("terr");e.textContent="";$("tout").hidden=true;
+  var dist=n($("dist").value),spd=n($("spd").value),z1=n($("tzn").value),z2=n($("azn").value);
+  var hasDep=$("tdate").value&&$("ttime").value,hasArr=$("sdate").value&&$("stime").value;
+  if(!hasDep||isNaN(dist)||isNaN(z1)||isNaN(z2))return;
+  if(dist<=0){e.textContent="Расстояние должно быть больше нуля.";return}
+  var t1=($("tzs").value==="E"?1:-1)*z1,t2=($("azs").value==="E"?1:-1)*z2;
+  var ds=$("tdate").value.split("-"),ts=$("ttime").value.split(":");
+  var depU=Date.UTC(+ds[0],+ds[1]-1,+ds[2],+ts[0],+ts[1],0)-t1*3600000;
+  var hrs,arrU,mode;
+  if(hasArr){
+    var c=$("sdate").value.split("-"),f=$("stime").value.split(":");
+    arrU=Date.UTC(+c[0],+c[1]-1,+c[2],+f[0],+f[1],0)-t2*3600000;
+    hrs=(arrU-depU)/3600000;
+    if(hrs<=0){e.textContent="Прибытие должно быть позже отхода (с учётом часовых поясов).";return}
+    mode="spd";
+  }else if(!isNaN(spd)){
+    if(spd<=0){e.textContent="Скорость должна быть больше нуля.";return}
+    hrs=dist/spd;arrU=depU+hrs*3600000;mode="eta";
+  }else return;
+  var tm=Math.round(hrs*60),dd=Math.floor(tm/1440),hh=Math.floor(tm%1440/60),mm=tm%60,p=[];
+  if(dd>0)p.push(dd+" дн.");if(hh>0)p.push(hh+" ч.");p.push(mm+" мин.");
+  var v=dist/hrs;
+  $("thead").textContent=mode==="spd"?"Результат: требуемая скорость":"Результат: ETA";
+  $("sblk").hidden=mode!=="spd";
+  $("tspd").textContent=v.toFixed(1)+" уз";
+  $("tdur").textContent=p.join(" ");
+  var al=new Date(arrU+t2*3600000);
+  $("tadate").textContent=pad(al.getUTCDate(),2)+"."+pad(al.getUTCMonth()+1,2)+"."+al.getUTCFullYear();
+  $("tatime").textContent=pad(al.getUTCHours(),2)+":"+pad(al.getUTCMinutes(),2);
+  $("twarn").textContent=(mode==="spd"&&v>40)?"Скорость выше 40 узлов — проверьте даты, время и пояса.":"";
+  var R=[["Отход, местное ("+zl(z1,$("tzs").value)+")",fmt(depU+t1*3600000)],["Отход, UTC",fmt(depU)],["Прибытие, UTC",fmt(arrU)],["Прибытие, местное ("+zl(z2,$("azs").value)+")",fmt(arrU+t2*3600000)],["Всего в пути",hrs.toFixed(2)+" ч ("+tm+" мин)"]];
+  if(mode==="spd")R.push(["Скорость",v.toFixed(2)+" уз"]);
+  $("ttb").innerHTML=R.map(function(r){return "<tr><td>"+r[0]+"</td><td>"+r[1]+"</td></tr>"}).join("");
+  $("tout").hidden=false;
+}
+["tdate","ttime","tzn","tzs","azn","azs","sdate","stime","dist","spd"].forEach(function(id){$(id).addEventListener("input",tcalc);$(id).addEventListener("change",tcalc)});
+</script>
+</body>
+</html>
