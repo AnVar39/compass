@@ -57,6 +57,7 @@ input::-webkit-calendar-picker-indicator{opacity:1;cursor:pointer}
  #t1res,#t1in{flex:0 0 100%;min-width:0;scroll-snap-align:start}
  #t1res{order:1}#t1in{order:2}
 }
+@media (min-width:600px){.duo{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}}
 </style>
 </head>
 <body>
@@ -116,6 +117,7 @@ input::-webkit-calendar-picker-indicator{opacity:1;cursor:pointer}
 </section>
 
 <section id="t2" hidden>
+<div class="duo">
 <div class="card">
 <h2>Отход</h2>
 <label>Дата отхода (местная)</label>
@@ -132,6 +134,7 @@ input::-webkit-calendar-picker-indicator{opacity:1;cursor:pointer}
 <div class="row">
 <div><label>Время прихода (местное)</label><input id="stime" type="time"></div>
 <div><label>Часовой пояс порта прихода, E/W</label><div class="c3"><select id="azn"></select><select id="azs"><option>E</option><option>W</option></select></div></div>
+</div>
 </div>
 </div>
 <div class="card">
@@ -838,14 +841,14 @@ function skyCalc(){
   vis.sort(function(a,b){return so==="az"?a.az-b.az:so==="n"?a.n.localeCompare(b.n,"ru"):b.h-a.h});
   var ph=rs.h>0?"день":rs.h>-6?"гражданские сумерки":rs.h>-12?"навигационные сумерки (удобно для звёзд и горизонта)":rs.h>-18?"астрономические сумерки":"ночь";
   info.textContent="φ "+(lat>=0?"N ":"S ")+dm(Math.abs(lat))+", λ "+(lon>=0?"E ":"W ")+dm(Math.abs(lon))+" · UTC "+pad(u.getUTCDate(),2)+"."+pad(u.getUTCMonth()+1,2)+"."+u.getUTCFullYear()+" "+pad(u.getUTCHours(),2)+":"+pad(u.getUTCMinutes(),2)+":"+pad(u.getUTCSeconds(),2)+" · Солнце h = "+rs.h.toFixed(1)+"°: "+ph;
-  $("skytb").innerHTML="<tr><td class='h'>Светило</td><td class='h' style='text-align:right'>ИП</td><td class='h'>Высота h</td></tr>"+vis.map(function(o){return "<tr><td>"+o.n+"</td><td style='text-align:right'>"+o.az.toFixed(1)+"°</td><td>"+o.h.toFixed(1)+"°</td></tr>"}).join("");
+  $("skytb").innerHTML="<tr><td class='h'>Светило</td><td class='h' style='text-align:right'>ИП</td><td class='h' style='text-align:right'>Высота h</td></tr>"+vis.map(function(o){return "<tr><td>"+o.n+"</td><td style='text-align:right'>"+o.az.toFixed(1)+"°</td><td>"+o.h.toFixed(1)+"°</td></tr>"}).join("");
   $("skyn").textContent="Светил в списке: "+vis.length+" из "+list.length+"."+(rs.h>-6?" Небо светлое: звёзды невооружённым глазом не видны, показаны расчётные положения.":"");
   var c=160,R=135,sv="";
   [0,30,60].forEach(function(a){var r=R*(90-a)/90;sv+="<circle cx='"+c+"' cy='"+c+"' r='"+r.toFixed(1)+"' style='fill:none;stroke:var(--bd)'/>"+(a>0?"<text x='"+(c+3)+"' y='"+(c-r-2).toFixed(1)+"' style='fill:var(--mut);font-size:9px'>"+a+"°</text>":"")});
   sv+="<line x1='"+c+"' x2='"+c+"' y1='"+(c-R)+"' y2='"+(c+R)+"' style='stroke:var(--bd)'/><line x1='"+(c-R)+"' x2='"+(c+R)+"' y1='"+c+"' y2='"+c+"' style='stroke:var(--bd)'/>";
   [["N",c,c-R-6],["S",c,c+R+14],["E",c+R+8,c+4],["W",c-R-8,c+4]].forEach(function(t){sv+="<text x='"+t[1]+"' y='"+t[2]+"' text-anchor='middle' style='fill:var(--tx);font-weight:700;font-size:12px'>"+t[0]+"</text>"});
   vis.forEach(function(o){var r=R*(90-o.h)/90,a=o.az*Math.PI/180,x=c+r*Math.sin(a),y=c-r*Math.cos(a);
-    sv+="<circle cx='"+x.toFixed(1)+"' cy='"+y.toFixed(1)+"' r='"+(o.sun?7:3.5)+"' style='fill:"+(o.sun?"#f5b301":"var(--ac)")+"'/><text x='"+(x+6).toFixed(1)+"' y='"+(y+3).toFixed(1)+"' style='fill:var(--tx);font-size:8px'>"+o.n.replace(/^\d+ /,"")+"</text>"});
+    sv+="<circle cx='"+x.toFixed(1)+"' cy='"+y.toFixed(1)+"' r='"+(o.sun?7:3.5)+"' style='fill:"+(o.sun?"#f5b301":o.n==="Polaris"?"#fff;stroke:#8a99ad;stroke-width:1":"var(--ac)")+"'/><text x='"+(x+6).toFixed(1)+"' y='"+(y+3).toFixed(1)+"' style='fill:var(--tx);font-size:8px'>"+o.n.replace(/^\d+ /,"")+"</text>"});
   $("skychart").innerHTML="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 340' style='width:100%;max-width:520px;height:auto;display:block;margin:0 auto;font-family:system-ui,sans-serif'><g transform='translate(0,6)'>"+sv+"</g></svg>";
 }
 $("skyup").onclick=function(){
