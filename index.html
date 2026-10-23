@@ -58,6 +58,8 @@ input::-webkit-calendar-picker-indicator{opacity:1;cursor:pointer}
  #t1res{order:1}#t1in{order:2}
 }
 @media (min-width:600px){.duo{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}}
+.row{align-items:flex-end}
+input,select{height:48px}
 </style>
 </head>
 <body>
@@ -298,10 +300,12 @@ input::-webkit-calendar-picker-indicator{opacity:1;cursor:pointer}
 <div><label>Длина L, м</label><input id="gL" inputmode="decimal"></div>
 </div>
 <div class="row">
-<div><label>Средняя осадка d, м</label><input id="gd" inputmode="decimal"></div>
+<div><label>Коэффициент C</label><input id="gc" inputmode="decimal" placeholder="например 0.88"></div>
 <div><label>Мин. допустимая h, м</label><input id="gmin" inputmode="decimal" placeholder="необязательно"></div>
 </div>
-<div class="note">L и d нужны только для расчёта коэффициента C по размерам судна.</div>
+<select id="gref" style="margin-top:8px"><option value="">Подобрать C из справочника…</option><option value="0.88">Каботажные суда (в балласте): 0,88</option><option value="0.80">Промысловые суда (открытое море): 0,80</option><option value="0.95">Промысловые суда (прибрежный лов): 0,95</option><option value="0.62-1.00">Транспортные суда (в грузу): 0,62–1,00</option></select>
+<button class="sec" id="gccb">Рассчитать C по размерам (B, L, d)</button>
+<div class="note">C постоянный для судна и сохраняется в профиле. Можно ввести диапазон, например 0.62-1.00. Расчёт C по размерам берёт осадку d из блока «Приращение осадки при крене».</div>
 <button class="sec" id="gsave">💾 Сохранить профиль судна</button>
 <div class="note" id="gpm"></div>
 </div>
@@ -320,13 +324,6 @@ input::-webkit-calendar-picker-indicator{opacity:1;cursor:pointer}
 </div>
 <div class="note">Полное колебание: от крайнего положения борта до того же положения. Для точности замеряйте 5–10 колебаний и берите среднее.</div>
 </div>
-<div class="card">
-<h2>Коэффициент C</h2>
-<select id="gcm"><option value="ref">Из справочника</option><option value="man">Ввести известное значение</option><option value="calc">Расчёт по размерам судна</option></select>
-<div id="gcref"><select id="gref" style="margin-top:8px"><option value="0.88">Каботажные суда (в балласте): 0,88</option><option value="0.80">Промысловые суда (открытое море): 0,80</option><option value="0.95">Промысловые суда (прибрежный лов): 0,95</option><option value="0.62-1.00">Транспортные суда (в грузу): 0,62–1,00</option></select></div>
-<div id="gcman" hidden><label>C из судовой документации (получено при креновании)</label><input id="gc" inputmode="decimal"></div>
-<div id="gccalc" hidden class="note">C = 0,7487 + 0,0456·(B/d) − 0,000864·L. Нужны B, d и L из профиля судна.</div>
-</div>
 <div class="note err" id="gerr"></div>
 <div class="card" id="gout" hidden>
 <h2>Результат</h2>
@@ -337,9 +334,11 @@ input::-webkit-calendar-picker-indicator{opacity:1;cursor:pointer}
 </div>
 <div class="card">
 <h2>Приращение осадки при крене</h2>
-<label>Угол крена θ, градусы</label>
-<input id="kth" inputmode="decimal" placeholder="например 5">
-<div class="note">Ширина B и осадка d берутся из профиля судна выше.</div>
+<div class="row">
+<div><label>Осадка прямая d, м</label><input id="gd" inputmode="decimal"></div>
+<div><label>Угол крена θ, градусы</label><input id="kth" inputmode="decimal" placeholder="например 5"></div>
+</div>
+<div class="note">Ширина B берётся из профиля судна выше. Осадка зависит от загрузки, поэтому вводится здесь.</div>
 <div class="note err" id="kerr"></div>
 <div id="kout" hidden>
 <div class="lbl">Приращение осадки Δd</div><div class="big2" id="kdd"></div>
@@ -570,7 +569,7 @@ function tcalc(){
   $("tout").hidden=false;
 }
 ["tdate","ttime","tzn","tzs","azn","azs","sdate","stime","dist","spd"].forEach(function(id){$(id).addEventListener("input",tcalc);$(id).addEventListener("change",tcalc)});
-if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}
+if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").then(function(){return navigator.serviceWorker.ready}).then(function(){var d=document.createElement("div");d.className="note";d.textContent="Офлайн-режим готов: приложение откроется без интернета. Поиск порта и прогноз приливов требуют сети.";document.body.appendChild(d)}).catch(function(){})})}
 
 var TD=null,PR=[];
 function zoneT(){return ($("pzs").value==="E"?1:-1)*n($("pzn").value)}
@@ -752,17 +751,15 @@ function chartSVG(pts,ext,cur,z,s0,s1,o){
 }
 
 function gC(B,e){
-  var m=$("gcm").value;
-  if(m==="ref")return $("gref").value.split("-").map(Number);
-  if(m==="man"){var c=n($("gc").value);if(isNaN(c)||c<=0){e.textContent="Введите коэффициент C.";return null}return [c]}
-  var d=n($("gd").value),L=n($("gL").value);
-  if(isNaN(d)||isNaN(L)||d<=0||L<=0){e.textContent="Для расчёта C введите среднюю осадку d и длину L.";return null}
-  return [0.7487+0.0456*(B/d)-0.000864*L];
+  var t=($("gc").value||"").replace(",",".").replace("−","-").replace("–","-").replace(/\s/g,"");
+  if(!t){e.textContent="Введите коэффициент C в профиле судна.";return null}
+  var p=t.split("-").map(Number);
+  if(p.length>2||p.some(function(x){return isNaN(x)||x<=0})){e.textContent="Коэффициент C: число (например 0.88) или диапазон 0.62-1.00.";return null}
+  return p;
 }
 function gcalc(){
   var e=$("gerr"),w=[];e.textContent="";$("gout").hidden=true;
   $("gdirect").hidden=$("gtm").value!=="direct";$("gmeas").hidden=$("gtm").value!=="meas";
-  $("gcref").hidden=$("gcm").value!=="ref";$("gcman").hidden=$("gcm").value!=="man";$("gccalc").hidden=$("gcm").value!=="calc";
   var B=n($("gB").value),T;
   if($("gtm").value==="meas"){
     var dt=n($("gdt").value),k=n($("gn").value);
@@ -787,9 +784,9 @@ function gcalc(){
   if(T>25)w.push("Очень большой период: проверьте замер, остойчивость может быть мала.");
   $("gw").textContent=w.join(" ");$("gout").hidden=false;
 }
-["gname","gB","gL","gd","gmin","gtm","gT","gdt","gn","gcm","gref","gc"].forEach(function(id){$(id).addEventListener("input",gcalc);$(id).addEventListener("change",gcalc)});
-$("gsave").onclick=function(){try{localStorage.setItem("vessel_profile",JSON.stringify({name:$("gname").value,B:$("gB").value,L:$("gL").value,d:$("gd").value,min:$("gmin").value}));$("gpm").textContent="Профиль сохранён на этом устройстве."}catch(x){$("gpm").textContent="Не удалось сохранить профиль в этом окне."}};
-(function(){try{var p=JSON.parse(localStorage.getItem("vessel_profile")||"null");if(p){$("gname").value=p.name||"";$("gB").value=p.B||"";$("gL").value=p.L||"";$("gd").value=p.d||"";$("gmin").value=p.min||"";$("gpm").textContent="Загружен профиль"+(p.name?": "+p.name:"")+"."}}catch(x){}})();
+["gname","gB","gL","gmin","gtm","gT","gdt","gn","gc"].forEach(function(id){$(id).addEventListener("input",gcalc);$(id).addEventListener("change",gcalc)});
+$("gsave").onclick=function(){try{localStorage.setItem("vessel_profile",JSON.stringify({name:$("gname").value,B:$("gB").value,L:$("gL").value,c:$("gc").value,min:$("gmin").value}));$("gpm").textContent="Профиль сохранён на этом устройстве."}catch(x){$("gpm").textContent="Не удалось сохранить профиль в этом окне."}};
+(function(){try{var p=JSON.parse(localStorage.getItem("vessel_profile")||"null");if(p){$("gname").value=p.name||"";$("gB").value=p.B||"";$("gL").value=p.L||"";$("gc").value=p.c||"";$("gmin").value=p.min||"";$("gpm").textContent="Загружен профиль"+(p.name?": "+p.name:"")+"."}}catch(x){}})();
 var swT=null,swS=0;
 $("gsw").onclick=function(){
   if(swT===null){swS=Date.now();$("gsw").textContent="■ Стоп · 0.0 с";swT=setInterval(function(){$("gsw").textContent="■ Стоп · "+((Date.now()-swS)/1000).toFixed(1)+" с"},100)}
@@ -857,6 +854,12 @@ $("skyup").onclick=function(){
   navigator.geolocation.getCurrentPosition(function(p){setC("la",p.coords.latitude,"N","S");setC("lo",p.coords.longitude,"E","W");m.textContent="Координаты и время обновлены (точность ≈ "+Math.round(p.coords.accuracy)+" м)";skyCalc()},function(e){m.className="note err";m.textContent="GPS не получен ("+e.message+"): время обновлено, координаты прежние.";skyCalc()},{enableHighAccuracy:true,timeout:15000});
 };
 ["skymin","skysort"].forEach(function(id){$(id).addEventListener("change",skyCalc)});
+$("gref").onchange=function(){if(this.value){$("gc").value=this.value;gcalc()}};
+$("gccb").onclick=function(){
+  var B=n($("gB").value),L=n($("gL").value),d=n($("gd").value),m=$("gpm");
+  if(isNaN(B)||isNaN(L)||isNaN(d)||d<=0){m.textContent="Для расчёта C введите B, L и осадку d (блок «Приращение осадки при крене»).";return}
+  var c=0.7487+0.0456*(B/d)-0.000864*L;$("gc").value=c.toFixed(3);m.textContent="C = 0,7487 + 0,0456·(B/d) − 0,000864·L = "+c.toFixed(3)+". Нажмите «Сохранить профиль судна».";gcalc();
+};
 </script>
 </body>
 </html>
