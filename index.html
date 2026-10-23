@@ -60,7 +60,7 @@ input::-webkit-calendar-picker-indicator{opacity:1;cursor:pointer}
 </style>
 </head>
 <body>
-<div class="tabs"><button class="tab on" data-t="t1">🧭 Расчёт поправки компаса</button><button class="tab" data-t="t2">🚢 Расчёт ETA</button><button class="tab" data-t="t3">🌊 Приливы</button><button class="tab" data-t="t4">📖 Таблицы ATT</button><button class="tab" data-t="t5">⚖️ Расчёт метацентрической высоты по периоду качки</button></div>
+<div class="tabs"><button class="tab on" data-t="t1">🧭 Расчёт поправки компаса</button><button class="tab" data-t="t2">🚢 Расчёт ETA</button><button class="tab" data-t="t3">🌊 Приливы</button><button class="tab" data-t="t4">📖 Таблицы ATT</button><button class="tab" data-t="t6">🌟 Азимуты светил</button><button class="tab" data-t="t5">⚖️ Расчёт метацентрической высоты по периоду качки</button></div>
 <section id="t1"><div class="seg" id="t1seg"><button data-p="res">📊 Результат</button><button data-p="in" class="on">✏️ Ввод данных</button></div><div id="t1wrap"><div id="t1in">
 
 <div class="card">
@@ -74,12 +74,9 @@ input::-webkit-calendar-picker-indicator{opacity:1;cursor:pointer}
 </div>
 
 <div class="card">
-<h2>Дата</h2>
+<h2>Дата и время</h2>
+<label>Дата (по часам)</label>
 <input id="date" type="date">
-</div>
-
-<div class="card">
-<h2>Время</h2>
 <div class="row">
 <div><label>Время по часам</label><input id="time" type="time" step="1"></div>
 <div><label>Часовой пояс, E/W</label><div class="c3"><input id="zn" inputmode="decimal" placeholder="№"><select id="zs"><option>E</option><option>W</option></select></div></div>
@@ -352,6 +349,22 @@ input::-webkit-calendar-picker-indicator{opacity:1;cursor:pointer}
 <div class="note">Капитанская формула: h = (C·B/T)². Это приближённая оценка. Она не заменяет информацию об остойчивости судна и кренование. Значения C в справочнике ориентировочные: сверяйте с документацией судна.</div>
 </section>
 
+<section id="t6" hidden>
+<div class="card">
+<h2>Азимуты светил</h2>
+<div class="note" id="skyinfo" style="margin-top:0"></div>
+<button id="skyup">🔄 Обновить координаты и время</button>
+<div class="note" id="skymsg"></div>
+<div class="row">
+<div><label>Показывать от высоты</label><select id="skymin"><option value="0">0°</option><option value="5" selected>5°</option><option value="10">10°</option><option value="20">20°</option></select></div>
+<div><label>Сортировка</label><select id="skysort"><option value="h">по высоте</option><option value="az">по азимуту</option><option value="n">по названию</option></select></div>
+</div>
+</div>
+<div class="card"><h2>Небесная сфера (вид сверху)</h2><div id="skychart"></div><div class="note">Центр: зенит, внешний круг: горизонт, N вверху. Жёлтая точка: Солнце. Кольца: высота 30° и 60°.</div></div>
+<div class="card"><h2>Светила над горизонтом</h2><table id="skytb"></table><div class="note" id="skyn"></div></div>
+<div class="note">Координаты, дата, время и пояс берутся с вкладки «Расчёт поправки компаса». Кнопка «Обновить» ставит текущее время (в выбранном поясе) и берёт координаты с GPS. В списке Солнце и 57 навигационных звёзд МАЕ с Полярной. Луна и планеты не включены. ИП: истинный пеленг (азимут от севера по часовой стрелке).</div>
+</section>
+
 <script>
 var D=Math.PI/180;
 var ST=[["Alpheratz",0,8,23.26,29,5,25.6,135.68,-162.95],["Ankaa",0,26,17.05,-42,18,21.5,232.76,-353.64],["Schedar",0,40,30.44,56,32,14.4,50.36,-32.17],["Diphda",0,43,35.37,-17,59,11.8,232.79,32.71],["Achernar",1,37,42.85,-57,14,12.3,87.0,-38.2],["Hamal",2,7,10.41,23,27,44.7,190.73,-145.77],["Acamar",2,58,15.68,-40,18,17.0,-53,20],["Menkar",3,2,16.77,4,5,23.6,-11.81,-78.76],["Mirfak",3,24,19.37,49,51,40.2,23.75,-26.23],["Aldebaran",4,35,55.24,16,30,33.5,62.78,-189.36],["Rigel",5,14,32.27,-8,12,5.9,1.31,0.50],["Capella",5,16,41.36,45,59,52.8,75.52,-427.13],["Bellatrix",5,25,7.86,6,20,58.9,-8.75,-13.28],["Elnath",5,26,17.51,28,36,26.8,23.28,-174.22],["Alnilam",5,36,12.81,-1,12,6.9,1.49,-1.06],["Betelgeuse",5,55,10.31,7,24,25.4,27.54,11.30],["Canopus",6,23,57.11,-52,41,44.4,19.93,23.24],["Sirius",6,45,8.92,-16,42,58.0,-546.01,-1223.07],["Adhara",6,58,37.55,-28,58,19.5,2.63,2.29],["Procyon",7,39,18.12,5,13,30.0,-714.59,-1036.80],["Pollux",7,45,18.95,28,1,34.3,-625.69,-45.95],["Avior",8,22,30.84,-59,30,34.1,-25.34,22.72],["Suhail",9,7,59.76,-43,25,57.3,-23.21,14.28],["Miaplacidus",9,13,11.98,-69,43,1.9,-157.66,108.91],["Alphard",9,27,35.24,-8,39,31.2,-14.49,33.25],["Regulus",10,8,22.31,11,58,2.0,-249.40,4.91],["Dubhe",11,3,43.67,61,45,3.7,-136.46,-35.25],["Denebola",11,49,3.58,14,34,19.4,-499.02,-113.78],["Gienah",12,15,48.37,-17,32,30.9,-158.61,-21.86],["Acrux",12,26,35.90,-63,5,56.7,-35.83,-14.86],["Gacrux",12,31,9.96,-57,6,47.6,27.94,-264.33],["Alioth",12,54,1.75,55,57,35.4,111.91,-8.24],["Spica",13,25,11.58,-11,9,40.8,-42.35,-30.67],["Alkaid",13,47,32.44,49,18,47.8,-121.23,-15.56],["Hadar",14,3,49.41,-60,22,22.9,-33.27,-23.16],["Menkent",14,6,40.95,-36,22,11.8,-519.29,-517.87],["Arcturus",14,15,39.67,19,10,56.7,-1093.39,-2000.06],["Rigil Kent.",14,39,36.49,-60,50,2.4,-3679.25,473.67],["Zubenelgenubi",14,50,52.71,-16,2,30.4,-105.69,-69.00],["Kochab",14,50,42.33,74,9,19.8,-32.29,11.91],["Alphecca",15,34,41.27,26,42,52.9,120.38,-89.44],["Antares",16,29,24.46,-26,25,55.2,-10.16,-23.21],["Atria",16,48,39.90,-69,1,39.8,17.85,-32.92],["Sabik",17,10,22.69,-15,43,29.7,41.16,97.65],["Shaula",17,33,36.52,-37,6,13.8,-8.90,-29.95],["Rasalhague",17,34,56.07,12,33,36.1,110.08,-222.61],["Eltanin",17,56,36.37,51,29,20.0,-8.52,-23.05],["Kaus Austr.",18,24,10.32,-34,23,4.6,-39.61,-124.05],["Vega",18,36,56.34,38,47,1.3,200.94,286.23],["Nunki",18,55,15.93,-26,17,48.2,13.87,-52.65],["Altair",19,50,47.00,8,52,6.0,536.82,385.54],["Peacock",20,25,38.86,-56,44,6.3,7.71,-86.15],["Deneb",20,41,25.92,45,16,49.2,1.56,1.55],["Enif",21,44,11.16,9,52,30.0,30.02,1.38],["Al Na\u2019ir",22,8,13.98,-46,57,39.5,127.60,-147.91],["Fomalhaut",22,57,39.05,-29,37,20.1,329.22,-164.22],["Markab",23,4,45.65,15,12,18.9,61.10,-42.56],["Polaris",2,31,49.09,89,15,50.8,44.48,-11.85]];
@@ -508,7 +521,7 @@ function calc(){
 $("calc").onclick=calc;
 document.querySelectorAll(".tab").forEach(function(b){b.onclick=function(){
   document.querySelectorAll(".tab").forEach(function(x){x.classList.toggle("on",x===b)});
-  ["t1","t2","t3","t4","t5"].forEach(function(id){$(id).hidden=b.dataset.t!==id});
+  ["t1","t2","t3","t4","t5","t6"].forEach(function(id){$(id).hidden=b.dataset.t!==id});if(b.dataset.t==="t6")skyCalc();
 }});
 ["tzn","azn"].forEach(function(id){var h="";for(var i=0;i<=12;i++)h+="<option value=\""+i+"\">"+i+"</option>";$(id).innerHTML=h});
 (function(){var d=new Date(),o=-d.getTimezoneOffset()/60;
@@ -806,6 +819,41 @@ function kcalc(){
   w.addEventListener("scroll",mark);
   if(window.matchMedia("(max-width:599px)").matches)setTimeout(function(){w.scrollLeft=w.scrollWidth;mark()},50);
 })();
+
+function nowFields(){
+  var z=n($("zn").value);
+  if(isNaN(z)){setNow();return}
+  var d=new Date(Date.now()+($("zs").value==="E"?1:-1)*z*3600000);
+  $("date").value=d.getUTCFullYear()+"-"+pad(d.getUTCMonth()+1,2)+"-"+pad(d.getUTCDate(),2);
+  $("time").value=pad(d.getUTCHours(),2)+":"+pad(d.getUTCMinutes(),2)+":"+pad(d.getUTCSeconds(),2);
+}
+function skyCalc(){
+  var info=$("skyinfo"),lat=getC("la","N"),lon=getC("lo","E"),z=n($("zn").value);
+  if(isNaN(lat)||isNaN(lon)||isNaN(z)||!$("date").value||!$("time").value){info.textContent="Введите координаты, дату, время и пояс на вкладке «Расчёт поправки компаса» или нажмите «Обновить».";$("skytb").innerHTML="";$("skychart").innerHTML="";$("skyn").textContent="";return}
+  var ds=$("date").value.split("-"),ts=$("time").value.split(":"),tzh=($("zs").value==="E"?1:-1)*z;
+  var utc=Date.UTC(+ds[0],+ds[1]-1,+ds[2],+ts[0],+ts[1],+(ts[2]||0))-tzh*3600000,u=new Date(utc);
+  var g=gmst(utc),sn=sunAt(utc),rs=azAlt(lat,sn.dec,n360(sn.gha+lon)),list=[{n:"Солнце",az:rs.az,h:rs.h,sun:true}];
+  ST.forEach(function(s,i){var st=starAt(utc,s),r=azAlt(lat,st.dec,n360(g+st.eq+st.sha+lon));list.push({n:(i<57?(i+1)+" ":"")+s[0],az:r.az,h:r.h})});
+  var minH=+$("skymin").value,vis=list.filter(function(o){return o.h>=minH}),so=$("skysort").value;
+  vis.sort(function(a,b){return so==="az"?a.az-b.az:so==="n"?a.n.localeCompare(b.n,"ru"):b.h-a.h});
+  var ph=rs.h>0?"день":rs.h>-6?"гражданские сумерки":rs.h>-12?"навигационные сумерки (удобно для звёзд и горизонта)":rs.h>-18?"астрономические сумерки":"ночь";
+  info.textContent="φ "+(lat>=0?"N ":"S ")+dm(Math.abs(lat))+", λ "+(lon>=0?"E ":"W ")+dm(Math.abs(lon))+" · UTC "+pad(u.getUTCDate(),2)+"."+pad(u.getUTCMonth()+1,2)+"."+u.getUTCFullYear()+" "+pad(u.getUTCHours(),2)+":"+pad(u.getUTCMinutes(),2)+":"+pad(u.getUTCSeconds(),2)+" · Солнце h = "+rs.h.toFixed(1)+"°: "+ph;
+  $("skytb").innerHTML="<tr><td class='h'>Светило</td><td class='h' style='text-align:right'>ИП</td><td class='h'>Высота h</td></tr>"+vis.map(function(o){return "<tr><td>"+o.n+"</td><td style='text-align:right'>"+o.az.toFixed(1)+"°</td><td>"+o.h.toFixed(1)+"°</td></tr>"}).join("");
+  $("skyn").textContent="Светил в списке: "+vis.length+" из "+list.length+"."+(rs.h>-6?" Небо светлое: звёзды невооружённым глазом не видны, показаны расчётные положения.":"");
+  var c=160,R=135,sv="";
+  [0,30,60].forEach(function(a){var r=R*(90-a)/90;sv+="<circle cx='"+c+"' cy='"+c+"' r='"+r.toFixed(1)+"' style='fill:none;stroke:var(--bd)'/>"+(a>0?"<text x='"+(c+3)+"' y='"+(c-r-2).toFixed(1)+"' style='fill:var(--mut);font-size:9px'>"+a+"°</text>":"")});
+  sv+="<line x1='"+c+"' x2='"+c+"' y1='"+(c-R)+"' y2='"+(c+R)+"' style='stroke:var(--bd)'/><line x1='"+(c-R)+"' x2='"+(c+R)+"' y1='"+c+"' y2='"+c+"' style='stroke:var(--bd)'/>";
+  [["N",c,c-R-6],["S",c,c+R+14],["E",c+R+8,c+4],["W",c-R-8,c+4]].forEach(function(t){sv+="<text x='"+t[1]+"' y='"+t[2]+"' text-anchor='middle' style='fill:var(--tx);font-weight:700;font-size:12px'>"+t[0]+"</text>"});
+  vis.forEach(function(o){var r=R*(90-o.h)/90,a=o.az*Math.PI/180,x=c+r*Math.sin(a),y=c-r*Math.cos(a);
+    sv+="<circle cx='"+x.toFixed(1)+"' cy='"+y.toFixed(1)+"' r='"+(o.sun?7:3.5)+"' style='fill:"+(o.sun?"#f5b301":"var(--ac)")+"'/><text x='"+(x+6).toFixed(1)+"' y='"+(y+3).toFixed(1)+"' style='fill:var(--tx);font-size:8px'>"+o.n.replace(/^\d+ /,"")+"</text>"});
+  $("skychart").innerHTML="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 340' style='width:100%;max-width:520px;height:auto;display:block;margin:0 auto;font-family:system-ui,sans-serif'><g transform='translate(0,6)'>"+sv+"</g></svg>";
+}
+$("skyup").onclick=function(){
+  nowFields();var m=$("skymsg");m.className="note";m.textContent="Определяю координаты…";
+  if(!navigator.geolocation){m.className="note err";m.textContent="GPS недоступен: время обновлено, координаты прежние.";skyCalc();return}
+  navigator.geolocation.getCurrentPosition(function(p){setC("la",p.coords.latitude,"N","S");setC("lo",p.coords.longitude,"E","W");m.textContent="Координаты и время обновлены (точность ≈ "+Math.round(p.coords.accuracy)+" м)";skyCalc()},function(e){m.className="note err";m.textContent="GPS не получен ("+e.message+"): время обновлено, координаты прежние.";skyCalc()},{enableHighAccuracy:true,timeout:15000});
+};
+["skymin","skysort"].forEach(function(id){$(id).addEventListener("change",skyCalc)});
 </script>
 </body>
 </html>
