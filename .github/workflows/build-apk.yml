@@ -1,0 +1,47 @@
+name: Build APK
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Install dependencies
+        run: npm install
+      - name: Prepare web files and icons
+        run: |
+          mkdir -p www assets
+          cp index.html manifest.webmanifest sw.js icon-192.png icon-512.png icon-maskable-512.png www/
+          cp icon-only.png icon-foreground.png icon-background.png splash.png splash-dark.png assets/
+      - name: Add Android platform
+        run: npx cap add android
+      - name: Generate app icons
+        run: npx capacitor-assets generate --android
+      - name: Add location permissions
+        run: |
+          sed -i 's#<application#<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <application#' android/app/src/main/AndroidManifest.xml
+      - name: Sync
+        run: npx cap sync android
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug
+      - name: Rename APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk Navigation.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Navigation-apk
+          path: Navigation.apk
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-${{ github.run_number }}
+          name: Навигация (сборка ${{ github.run_number }})
+          files: Navigation.apk
