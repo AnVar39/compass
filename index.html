@@ -60,10 +60,15 @@ input::-webkit-calendar-picker-indicator{opacity:1;cursor:pointer}
 @media (min-width:600px){.duo{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}}
 .row{align-items:flex-end}
 input,select{height:48px}
+.menu{position:sticky;top:0;z-index:40;margin:0 0 12px;padding:4px 0;background:var(--bg)}
+#menuBtn{margin:0;display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;font-size:15px;padding:12px 14px}
+.tabs{display:none;flex-direction:column;flex-wrap:nowrap;gap:4px;position:absolute;left:0;right:0;top:calc(100% + 2px);margin:0;padding:6px;background:var(--card);border:1px solid var(--bd);border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.4);max-height:75vh;overflow:auto}
+.tabs.open{display:flex}
+.tab{flex:none;text-align:left;font-size:15px;padding:12px}
 </style>
 </head>
 <body>
-<div class="tabs"><button class="tab on" data-t="t1">🧭 Расчёт поправки компаса</button><button class="tab" data-t="t2">🚢 Расчёт ETA</button><button class="tab" data-t="t3">🌊 Приливы</button><button class="tab" data-t="t4">📖 Таблицы ATT</button><button class="tab" data-t="t6">🌟 Азимуты светил</button><button class="tab" data-t="t5">⚖️ Расчёт метацентрической высоты по периоду качки</button></div>
+<div class="menu" id="menu"><button id="menuBtn" aria-haspopup="true"><span id="menuLbl">🧭 Расчёт поправки компаса</span><span>▾</span></button><div class="tabs" id="tabsMenu"><button class="tab on" data-t="t1">🧭 Расчёт поправки компаса</button><button class="tab" data-t="t2">🚢 Расчёт ETA</button><button class="tab" data-t="t3">🌊 Приливы</button><button class="tab" data-t="t4">📖 Таблицы ATT</button><button class="tab" data-t="t6">🌟 Азимуты светил</button><button class="tab" data-t="t5">⚖️ Расчёт метацентрической высоты по периоду качки</button></div></div>
 <section id="t1"><div class="seg" id="t1seg"><button data-p="res">📊 Результат</button><button data-p="in" class="on">✏️ Ввод данных</button></div><div id="t1wrap"><div id="t1in">
 
 <div class="card">
@@ -95,8 +100,8 @@ input,select{height:48px}
 <label>Измеренный компасный пеленг КП (0–360°)</label>
 <input id="kp" inputmode="decimal" placeholder="например 98.5">
 <div class="row">
-<div><label>Тип компаса</label><select id="ctype"><option value="mag">Магнитный</option><option value="gyro">Гирокомпас</option></select></div>
-<div><label>Магн. склонение d (E +), необяз.</label><input id="var" inputmode="decimal"></div>
+<div style="flex:0 0 auto;min-width:max-content"><label>Тип компаса</label><select id="ctype" style="width:auto"><option value="mag">Магнитный</option><option value="gyro">Гирокомпас</option></select></div>
+<div style="flex:1"><label>Магн. склонение d, необяз.</label><div class="c3"><input id="var" inputmode="decimal" placeholder="0.0"><select id="vars"><option>E</option><option>W</option></select></div></div>
 </div>
 <label>Высота глаза над водой, м (необяз.)</label>
 <input id="eye" inputmode="decimal" placeholder="для наклонения горизонта">
@@ -506,7 +511,7 @@ function calc(){
   var dk=n180(az-kp),kind=$("ctype").value;
   $("dk").textContent=(kind==="gyro"?"ΔГК = ":"ΔK = ")+(dk>=0?"+":"−")+Math.abs(dk).toFixed(1)+"°";
   $("dkl").textContent=name+" · "+(dk>=0?"E (плюс)":"W (минус)")+" · ΔK = ИП − КП";
-  var v=n($("var").value),sgn=function(x){return (x>=0?"+":"−")+Math.abs(x).toFixed(1)+"°"},S=[["#","Итог"]];
+  var v=n($("var").value)*($("vars").value==="W"?-1:1),sgn=function(x){return (x>=0?"+":"−")+Math.abs(x).toFixed(1)+"°"},S=[["#","Итог"]];
   if(kind==="gyro"){
     S.push(["Поправка гирокомпаса ΔГК",sgn(dk)],["Истинный пеленг (азимут) ИП",az.toFixed(1)+"°"],["Гирокомпасный пеленг ГКП",kp.toFixed(1)+"°"]);
   }else{
@@ -569,7 +574,7 @@ function tcalc(){
   $("tout").hidden=false;
 }
 ["tdate","ttime","tzn","tzs","azn","azs","sdate","stime","dist","spd"].forEach(function(id){$(id).addEventListener("input",tcalc);$(id).addEventListener("change",tcalc)});
-if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").then(function(){return navigator.serviceWorker.ready}).then(function(){var d=document.createElement("div");d.className="note";d.textContent="Офлайн-режим готов: приложение откроется без интернета. Поиск порта и прогноз приливов требуют сети.";document.body.appendChild(d)}).catch(function(){})})}
+if("serviceWorker" in navigator&&location.hostname!=="localhost"){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").then(function(){return navigator.serviceWorker.ready}).then(function(){var d=document.createElement("div");d.className="note";d.textContent="Офлайн-режим готов: приложение откроется без интернета. Поиск порта и прогноз приливов требуют сети.";document.body.appendChild(d)}).catch(function(){})})}
 
 var TD=null,PR=[];
 function zoneT(){return ($("pzs").value==="E"?1:-1)*n($("pzn").value)}
@@ -860,6 +865,13 @@ $("gccb").onclick=function(){
   if(isNaN(B)||isNaN(L)||isNaN(d)||d<=0){m.textContent="Для расчёта C введите B, L и осадку d (блок «Приращение осадки при крене»).";return}
   var c=0.7487+0.0456*(B/d)-0.000864*L;$("gc").value=c.toFixed(3);m.textContent="C = 0,7487 + 0,0456·(B/d) − 0,000864·L = "+c.toFixed(3)+". Нажмите «Сохранить профиль судна».";gcalc();
 };
+
+(function(){
+  var m=$("tabsMenu"),btn=$("menuBtn");
+  btn.onclick=function(e){e.stopPropagation();m.classList.toggle("open")};
+  document.querySelectorAll(".tab").forEach(function(b){b.addEventListener("click",function(){$("menuLbl").textContent=b.textContent;m.classList.remove("open")})});
+  document.addEventListener("click",function(e){if(!$("menu").contains(e.target))m.classList.remove("open")});
+})();
 </script>
 </body>
 </html>
