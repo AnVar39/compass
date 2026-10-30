@@ -1,10 +1,15 @@
-var C="compass-v15";
+var C="compass-v18";
 var F=["./","index.html","manifest.webmanifest","icon-192.png","icon-512.png","icon-maskable-512.png"];
+var OPT=["tides-data.js"];
 self.addEventListener("install",function(e){
   e.waitUntil(caches.open(C).then(function(c){
-    return Promise.all(F.map(function(u){
+    var req=Promise.all(F.map(function(u){
       return fetch(new Request(u,{cache:"reload"})).then(function(r){if(!r.ok)throw new Error(u);return c.put(u,r)});
     }));
+    var opt=Promise.all(OPT.map(function(u){
+      return fetch(new Request(u,{cache:"reload"})).then(function(r){if(r.ok)return c.put(u,r)}).catch(function(){});
+    }));
+    return Promise.all([req,opt]);
   }));
   self.skipWaiting();
 });

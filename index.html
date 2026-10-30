@@ -167,6 +167,19 @@ input,select{height:48px}
 
 <section id="t3" hidden>
 <div class="card">
+<h2>Порт из офлайн-базы</h2>
+<label>Название порта или страны (по-русски или латиницей)</label>
+<input id="dbq" placeholder="например Роттердам, Southampton или Япония">
+<div class="row">
+<div><button class="sec" id="dbfind">🔎 Найти</button></div>
+<div><button class="sec" id="dbnear">📍 Ближайшие</button></div>
+</div>
+<select id="dbres" hidden style="margin-top:8px"></select>
+<div class="note" id="dbinfo"></div>
+<div class="note">Работает без интернета: приливы считаются по гармоническим константам (8,6 тыс. станций мира). «Ближайшие» берёт координаты из блока «Порт» ниже (кнопка GPS). Ниже выберите дату, пояс и момент, прогноз пересчитается сам.</div>
+<div class="note" id="dbattr" style="font-size:11px">Данные: NOAA (общественное достояние); TICON-4: Hart-Davis, Dettmering, Seitz (2025), SEANOE, doi:10.17882/109129, CC BY 4.0; LINZ, Kartverket, DMI, JHOD. Сборка: Slackwater database (github.com/openwatersio/slackwater-database). Часть станций CC BY-NC: только некоммерческое использование.</div>
+</div>
+<div class="card">
 <h2>Порт</h2>
 <label>Название порта (поиск по всему миру)</label>
 <input id="pname" placeholder="например, Rotterdam или Владивосток">
@@ -617,8 +630,8 @@ function renderTide(){
   if(!TD)return;
   var z=zoneT(),t=TD.t,v=TD.v,ds=$("pdate").value.split("-"),days=+$("pdays").value;
   if(ds.length<3||isNaN(z))return;
-  var s0=Date.UTC(+ds[0],+ds[1]-1,+ds[2])-z*3600000,s1=s0+days*86400000,rows=[];
-  for(var i=1;i<t.length-1;i++){
+  var s0=Date.UTC(+ds[0],+ds[1]-1,+ds[2])-z*3600000,s1=s0+days*86400000,rows=TD.ext?TD.ext.filter(function(r){return r[0]>=s0&&r[0]<s1}):[];
+  for(var i=1;!TD.ext&&i<t.length-1;i++){
     var a=v[i-1],b=v[i],c=v[i+1];if(a==null||b==null||c==null)continue;
     var hw=b>a&&b>=c,lw=b<a&&b<=c;if(!hw&&!lw)continue;
     var den=a-2*b+c,dl=den?0.5*(a-c)/den:0,tm=t[i]+dl*3600000,h=b-0.25*(a-c)*dl;
@@ -631,11 +644,11 @@ function renderTide(){
   hh.textContent="—";hd.textContent="";
   if(tt.length>=2){
     var ms=s0+(+tt[0]*60+ +tt[1])*60000,h0=heightAt(ms),h1=heightAt(ms+600000);
-    if(h0!=null){hh.textContent=sg(h0)+" м";hd.textContent=h1==null?"":(h1>h0?"вода прибывает":"вода убывает")+" · относительно среднего уровня моря"}
+    if(h0!=null){hh.textContent=sg(h0)+" м";hd.textContent=h1==null?"":(h1>h0?"вода прибывает":"вода убывает")+" · относительно "+(TD.label||"среднего уровня моря")}
   }
   var pts=[];for(var q=s0;q<=s1;q+=600000){var hq=heightAt(q);if(hq!=null)pts.push([q,hq])}
   var cur=null;if(tt.length>=2){var cm=s0+(+tt[0]*60+ +tt[1])*60000,ch=heightAt(cm);if(ch!=null)cur=[cm,ch]}
-  setChart(chartSVG(pts,rows,cur,z,s0,s1,{lab:days<=2?2:days<=3?1:0}),"Время в выбранном поясе, высота от среднего уровня моря. Красные точки: ПВ, зелёные: МВ, зелёный пунктир: выбранный момент.");
+  setChart(chartSVG(pts,rows,cur,z,s0,s1,{lab:days<=2?2:days<=3?1:0}),"Время в выбранном поясе, высота от "+(TD.label||"среднего уровня моря")+". Красные точки: ПВ, зелёные: МВ, зелёный пунктир: выбранный момент.");
   $("pout").hidden=false;
 }
 ["pdate","pdays","ptime","pzn","pzs"].forEach(function(id){$(id).addEventListener("input",renderTide);$(id).addEventListener("change",renderTide)});
@@ -872,6 +885,161 @@ $("gccb").onclick=function(){
   document.querySelectorAll(".tab").forEach(function(b){b.addEventListener("click",function(){$("menuLbl").textContent=b.textContent;m.classList.remove("open")})});
   document.addEventListener("click",function(e){if(!$("menu").contains(e.target))m.classList.remove("open")});
 })();
+
+var DBSEL=null,DBL=null,DBLOAD=0;
+var TBASE={SA:[0,0,1,0,0,0,"one"],SSA:[0,0,2,0,0,0,"one"],MM:[0,1,0,-1,0,0,"MM"],MSF:[0,2,-2,0,0,0,"M2"],MF:[0,2,0,0,0,0,"MF"],Q1:[1,-3,1,1,0,90,"O1"],O1:[1,-2,1,0,0,90,"O1"],P1:[1,0,-1,0,0,90,"one"],K1:[1,0,1,0,0,-90,"K1"],S1:[1,0,0,0,0,0,"one"],"2Q1":[1,-4,1,2,0,90,"O1"],SIGMA1:[1,-4,3,0,0,90,"O1"],RHO1:[1,-3,3,-1,0,90,"O1"],J1:[1,1,1,-1,0,-90,"J1"],OO1:[1,2,1,0,0,-90,"OO1"],PI1:[1,0,-2,0,1,90,"one"],PSI1:[1,0,2,0,-1,-90,"one"],PHI1:[1,0,3,0,0,-90,"one"],"2N2":[2,-4,2,2,0,0,"M2"],MU2:[2,-4,4,0,0,0,"M2"],N2:[2,-3,2,1,0,0,"M2"],NU2:[2,-3,4,-1,0,0,"M2"],M2:[2,-2,2,0,0,0,"M2"],LAMBDA2:[2,-1,0,1,0,180,"M2"],L2:[2,-1,2,-1,0,180,"L2"],T2:[2,0,-1,0,1,0,"one"],S2:[2,0,0,0,0,0,"one"],R2:[2,0,1,0,-1,180,"one"],K2:[2,0,2,0,0,0,"K2"]};
+var TCOMP={M3:[["M2",1.5]],M4:[["M2",2]],M6:[["M2",3]],M8:[["M2",4]],MS4:[["M2",1],["S2",1]],MN4:[["M2",1],["N2",1]],S4:[["S2",2]],"2MS6":[["M2",2],["S2",1]],MK3:[["M2",1],["K1",1]],"2MK3":[["M2",2],["K1",-1]],MO3:[["M2",1],["O1",1]],SO3:[["S2",1],["O1",1]],SK3:[["S2",1],["K1",1]],S3:[["S2",1.5]],N4:[["N2",2]],"2MK5":[["M2",2],["K1",1]],"2MO5":[["M2",2],["O1",1]],MK4:[["M2",1],["K2",1]],SK4:[["S2",1],["K2",1]],"2MN6":[["M2",2],["N2",1]],"2MK6":[["M2",2],["K2",1]],"2SM6":[["S2",2],["M2",1]],MSK6:[["M2",1],["S2",1],["K2",1]],"2SM2":[["S2",2],["M2",-1]],MKS2:[["M2",1],["K2",1],["S2",-1]],MSN2:[["M2",1],["S2",1],["N2",-1]],"2MN2S2":[["M2",2],["N2",1],["S2",-2]],SN4:[["S2",1],["N2",1]]};
+function tFU(k,I,nu,xi,p){
+  var sI=Math.sin(I),c2=Math.pow(Math.cos(I/2),2);
+  if(k==="one")return [1,0];
+  if(k==="M2")return [c2*c2/0.9154,2*xi-2*nu];
+  if(k==="O1")return [sI*c2/0.3800,2*xi-nu];
+  if(k==="K1"){var s2=Math.sin(2*I),np=Math.atan(s2*Math.sin(nu)/(s2*Math.cos(nu)+0.3347));return [Math.sqrt(0.8965*s2*s2+0.6001*s2*Math.cos(nu)+0.1006),-np]}
+  if(k==="K2"){var q=sI*sI,npp=0.5*Math.atan(q*Math.sin(2*nu)/(q*Math.cos(2*nu)+0.0727));return [Math.sqrt(19.0444*q*q+2.7702*q*Math.cos(2*nu)+0.0981),-2*npp]}
+  if(k==="J1")return [Math.sin(2*I)/0.7214,-nu];
+  if(k==="OO1")return [sI*Math.pow(Math.sin(I/2),2)/0.0164,-2*xi-nu];
+  if(k==="MM")return [(2/3-sI*sI)/0.5021,0];
+  if(k==="MF")return [sI*sI/0.1578,-2*xi];
+  if(k==="L2"){var P=p*D-xi,t2=Math.pow(Math.tan(I/2),2),Ra=1/Math.sqrt(1-12*t2*Math.cos(2*P)+36*t2*t2),R=Math.atan2(Math.sin(2*P),1/(6*t2)-Math.cos(2*P)),m=tFU("M2",I,nu,xi,p);return [m[0]*Ra,m[1]-R]}
+  return [1,0];
+}
+function tNodal(Nd){
+  var OM=23.452*D,IN=5.145*D,n=Nd*D,I=Math.acos(Math.cos(IN)*Math.cos(OM)-Math.sin(IN)*Math.sin(OM)*Math.cos(n)),a=Math.tan(n/2);
+  var x1=2*Math.atan(Math.sin((OM-IN)/2)/Math.sin((OM+IN)/2)*a),x2=2*Math.atan(Math.cos((OM-IN)/2)/Math.cos((OM+IN)/2)*a),tp=2*Math.PI;
+  x1+=tp*Math.round((n-x1)/tp);x2+=tp*Math.round((n-x2)/tp);
+  return {I:I,nu:(x2-x1)/2,xi:n-(x1+x2)/2};
+}
+function tSpec(name){
+  var b=TBASE[name];
+  if(b)return {v:b.slice(0,5),off:b[5],parts:[[name,1]]};
+  var c=TCOMP[name];if(!c)return null;
+  var v=[0,0,0,0,0],off=0;
+  c.forEach(function(e){var bb=TBASE[e[0]];for(var i=0;i<5;i++)v[i]+=e[1]*bb[i];off+=e[1]*bb[5]});
+  return {v:v,off:off,parts:c};
+}
+function tPredict(flat,names,msArr){
+  var t0=(msArr[0]+msArr[msArr.length-1])/2,jd=t0/86400000+2440587.5,T=(jd-2451545)/36525;
+  var s=n360(218.3164477+481267.88123421*T-0.0015786*T*T),h=n360(280.46646+36000.76983*T+0.0003032*T*T),p=n360(83.3532465+4069.0137287*T-0.01032*T*T),N=n360(125.0445479-1934.1362891*T+0.0020754*T*T),p1=n360(282.93735+1.71946*T+0.00046*T*T);
+  var nd=tNodal(N),T0=15*((t0/3600000)%24)-180,out=new Array(msArr.length),i,k;
+  for(i=0;i<out.length;i++)out[i]=0;
+  for(k=0;k<flat.length;k+=3){
+    var sp=tSpec(names[flat[k]]);if(!sp)continue;
+    var f=1,u=0;
+    sp.parts.forEach(function(e){var fu=tFU(TBASE[e[0]][6],nd.I,nd.nu,nd.xi,p);f*=Math.pow(fu[0],Math.abs(e[1]));u+=e[1]*fu[1]});
+    var v=sp.v,V0=v[0]*T0+v[1]*s+v[2]*h+v[3]*p+v[4]*p1+sp.off+u/D,rate=15*v[0]+0.5490165*v[1]+0.0410686*v[2]+0.0046418*v[3]+0.000002*v[4],A=flat[k+1]*f,g=flat[k+2];
+    for(i=0;i<out.length;i++)out[i]+=A*Math.cos((V0+rate*(msArr[i]-t0)/3600000-g)*D);
+  }
+  return out;
+}
+function tExtremes(ms,h){
+  var r=[],i;
+  for(i=1;i<h.length-1;i++){
+    var a=h[i-1],b=h[i],c=h[i+1],hw=b>a&&b>=c,lw=b<a&&b<=c;if(!hw&&!lw)continue;
+    var den=a-2*b+c,dl=den?0.5*(a-c)/den:0;r.push([ms[i]+dl*(ms[1]-ms[0]),hw,b-0.25*(a-c)*dl]);
+  }
+  return r;
+}
+
+var RUA={"россия":["russia"],"украин":["ukraine"],"турц":["turkiye"],"греци":["greece"],"болгари":["bulgaria"],"румыни":["romania"],"эстони":["estonia"],"латви":["latvia"],"литв":["lithuania"],"польш":["poland"],"финлянд":["finland"],"швец":["sweden"],"норвег":["norway"],"дани":["denmark"],"герман":["germany"],"нидерланд":["netherlands"],"голланд":["netherlands"],"бельги":["belgium"],"франц":["france"],"великобритан":["united kingdom"],"англи":["united kingdom"],"ирланд":["ireland"],"исланд":["iceland"],"испани":["spain"],"португал":["portugal"],"итали":["italy"],"хорвати":["croatia"],"словени":["slovenia"],"египет":["egypt"],"китай":["china"],"япони":["japan"],"тайван":["taiwan"],"гонконг":["hong kong"],"сингапур":["singapore"],"вьетнам":["vietnam"],"таиланд":["thailand"],"малайзи":["malaysia"],"индонези":["indonesia"],"филиппин":["philippines"],"индия":["india"],"пакистан":["pakistan"],"бангладеш":["bangladesh"],"шри-ланк":["sri lanka"],"шри ланк":["sri lanka"],"иран":["iran"],"оман":["oman"],"йемен":["yemen"],"австрали":["australia"],"новая зеланд":["new zealand"],"новой зеланд":["new zealand"],"сша":["united states"],"америк":["united states"],"канад":["canada"],"мексик":["mexico"],"куба":["cuba"],"панам":["panama"],"бразили":["brazil"],"аргентин":["argentina"],"чили":["chile"],"перу":["peru"],"колумби":["colombia"],"венесуэл":["venezuela"],"эквадор":["ecuador"],"юар":["south africa"],"южная афр":["south africa"],"кени":["kenya"],"танзани":["tanzania"],"мозамбик":["mozambique"],"мадагаскар":["madagascar"],"нигери":["nigeria"],"гана":["ghana"],"сенегал":["senegal"],"ангол":["angola"],"гренланд":["greenland"],"фарер":["faroe"],"бермуд":["bermuda"],"багам":["bahamas"],"ямайк":["jamaica"],"гаити":["haiti"],"фиджи":["fiji"],"антаркт":["antarctica"],
+"санкт-петербург":["stpetersburg","kronstadt"],"петербург":["stpetersburg","kronstadt"],"кронштадт":["kronstadt"],"гогланд":["hogland"],"стамбул":["ioc ista"],"варна":["varna"],"бургас":["burgas"],"констанц":["ioc csta"],"одесс":["odesa","odessa"],"пирей":["piraeus","pireas"],"салоники":["thessaloniki"],"ираклион":["hrakleio"],"корфу":["kerkyra"],"родос":["rhodes"],"анталь":["antalya"],"босфор":["ioc ista"],
+"таллин":["tallinn"],"рига":["riga"],"вентспилс":["ventspils"],"лиепа":["liepaja"],"клайпед":["klaipeda"],"гданьск":["gdansk"],"хельсинк":["helsinki"],"котка":["kotka"],"хамина":["hamina"],"стокгольм":["stockholm"],"гетеборг":["goteborg","gothenburg"],"гётеборг":["goteborg","gothenburg"],"осло":["oslo"],"берген":["bergen"],"тромс":["troms"],"копенгаген":["kobenhavn","copenhagen"],"гамбург":["hamburg","cuxhaven"],"бремерхафен":["bremerhaven"],"куксхафен":["cuxhaven"],"киль":["kiel"],"любек":["lubeck","travemunde"],"роттердам":["rotterdam"],"амстердам":["amsterdam","ijmuiden"],"антверпен":["antwerp"],"зеебрюгге":["zeebrugge"],"гавр":["le havre"],"дюнкерк":["dunkerque"],"брест":["brest"],"марсель":["marseille"],"лиссабон":["lisboa","lisbon","cascais"],"гибралтар":["gibraltar"],"алхесирас":["algeciras"],"барселон":["barcelona"],"валенси":["valencia"],"генуя":["genova"],"генуи":["genova"],"неаполь":["napoli"],"ливорно":["livorno"],"палермо":["palermo"],"триест":["trieste"],"сплит":["split"],"александри":["alexandria"],"саутгемптон":["southampton"],"лондон":["london"],"ливерпул":["liverpool"],"дувр":["dover"],"дублин":["dublin"],"рейкьявик":["reykjavik"],"нью-йорк":["new york"],"бостон":["boston"],"майами":["miami"],"хьюстон":["houston"],"галвестон":["galveston"],"сан-франциско":["san francisco"],"лос-анджелес":["los angeles"],"сиэтл":["seattle"],"ванкувер":["vancouver"],"галифакс":["halifax"],"кальяо":["callao"],"вальпараисо":["valparaiso"],"буэнос-айрес":["buenos aires"],"кристобаль":["cristobal"],"гонолулу":["honolulu"],"сидней":["sydney"],"мельбурн":["melbourne"],"окленд":["auckland"],"веллингтон":["wellington"],"йокогама":["yokohama"],"кобе":["kobe"],"осака":["osaka"],"нагоя":["nagoya"],"токио":["tokyo"],"далянь":["dalian"],"сямэнь":["xiamen"],"гаосюн":["kaohsiung"],"маниль":["manila"],"сайгон":["vung tau"],"вунгтау":["vung tau"],"кейптаун":["cape town"],"дурбан":["durban"],"момбас":["mombasa"],"аден":["aden"],"маскат":["muscat"],"карачи":["karachi"],"коломбо":["colombo"],"читтагонг":["chittagong"],"джакарта":["jakarta"],"сингапур":["singapore","keppel","tanjong pagar"]};
+(function(){var n={},k;for(k in RUA)n[k.replace(/-/g," ")]=RUA[k];RUA=n})();
+var RUTR={а:"a",б:"b",в:"v",г:"g",д:"d",е:"e",ё:"e",ж:"zh",з:"z",и:"i",й:"y",к:"k",л:"l",м:"m",н:"n",о:"o",п:"p",р:"r",с:"s",т:"t",у:"u",ф:"f",х:"h",ц:"ts",ч:"ch",ш:"sh",щ:"sch",ъ:"",ы:"y",ь:"",э:"e",ю:"yu",я:"ya"};
+function ruAlts(w){
+  var k,r=[],t;w=w.replace(/ё/g,"е");
+  for(k in RUA){if(w.length>=3&&(w.indexOf(k)===0||(w.length>=4&&k.indexOf(w)===0)))r=r.concat(RUA[k])}
+  if(r.length)return r;
+  t=w.replace(/[а-яё]/g,function(c){return RUTR[c]||""});
+  return t?[t]:[];
+}
+var ZC={"Turkiye":3,"Japan":9,"Norway":1,"Sweden":1,"Denmark":1,"Germany":1,"Netherlands":1,"Belgium":1,"France":1,"Spain":1,"Italy":1,"Poland":1,"Croatia":1,"Slovenia":1,"Greece":2,"Bulgaria":2,"Romania":2,"Finland":2,"Estonia":2,"Latvia":2,"Lithuania":2,"Ukraine":2,"Egypt":2,"Ireland":0,"United Kingdom":0,"Iceland":0,"China":8,"Taiwan":8,"Hong Kong":8,"Singapore":8,"Philippines":8,"Malaysia":8,"Vietnam":7,"Thailand":7,"Pakistan":5,"Bangladesh":6,"Oman":4,"Yemen":3,"Djibouti":3,"Kenya":3,"Tanzania":3,"Madagascar":3,"Mozambique":2,"South Africa":2,"Namibia":2,"Angola":1,"Nigeria":1,"Cameroon":1,"Ghana":0,"Senegal":0,"Mauritania":0,"Argentina":-3,"Peru":-5,"Colombia":-5,"Panama":-5,"Cuba":-5,"Jamaica":-5,"Venezuela":-4,"Puerto Rico":-4,"Costa Rica":-6,"El Salvador":-6,"Guatemala":-6,"Honduras":-6,"Nicaragua":-6,"Belize":-6};
+function dbZone(o){
+  var z=ZC[o.c];if(z===undefined)z=Math.max(-12,Math.min(12,Math.round(o.lo/15)));
+  $("pzn").value=String(Math.abs(z));$("pzs").value=z>=0?"E":"W";return z;
+}
+function dbLoad(cb){
+  if(window.TIDEDB){dbInit();cb(true);return}
+  if(DBLOAD===1)return;DBLOAD=1;
+  var sc=document.createElement("script");sc.src="tides-data.js";
+  sc.onload=function(){DBLOAD=2;dbInit();cb(true)};
+  sc.onerror=function(){DBLOAD=0;cb(false)};
+  document.head.appendChild(sc);
+}
+function dbInit(){
+  if(DBL)return;DBL=[];var R=TIDEDB.ref,S=TIDEDB.sub,i,SN={N:"NOAA",T:"TICON-4",L:"LINZ",K:"Kartverket",J:"JHOD",D:"DMI"};
+  for(i=0;i<R.length;i++)DBL.push({n:R[i][0],c:R[i][1],la:R[i][2],lo:R[i][3],s:SN[R[i][4]]||R[i][4],k:0,i:i,r:R[i][8]});
+  for(i=0;i<S.length;i++)DBL.push({n:S[i][0],c:S[i][1],la:S[i][2],lo:S[i][3],s:SN[S[i][4]]||S[i][4],k:1,i:i,r:S[i][11]});
+  DBL.forEach(function(o){o.f=(o.n+" "+o.c+" "+(o.r||"")).toLowerCase().replace(/[_,\-]/g," ")});
+}
+function dbLabel(o){return o.n+(o.r?", "+o.r:"")+" — "+o.c+(o.k?" (вторичная)":"")}
+function dbFill(list,dist){
+  var s=$("dbres");
+  $("dbinfo").className="note";
+  if(!list.length){s.hidden=true;$("dbinfo").textContent="Ничего не найдено. Попробуйте латиницей или нажмите «Ближайшие» (порты России в базе почти не представлены).";DBSEL=null;return}
+  s.innerHTML=list.map(function(o,j){return "<option value=\""+j+"\">"+dbLabel(o)+(dist?" · "+Math.round(dist[j])+" миль":"")+"</option>"}).join("");
+  s._list=list;s.hidden=false;dbPick(0);
+}
+var ZNOTE="";
+function dbPick(j){var o=$("dbres")._list[j];if(!o)return;DBSEL=o;var z=dbZone(o);ZNOTE=" · пояс выставлен автоматически: "+(z>=0?"E ":"W ")+Math.abs(z)+" (стандартное время, проверьте)";dbRun()}
+$("dbres").onchange=function(){dbPick(+this.value)};
+$("dbfind").onclick=function(){
+  var q=$("dbq").value.trim().toLowerCase().replace(/[_,\-]/g," ");if(!q)return;
+  $("dbinfo").className="note";$("dbinfo").textContent="Загружаю базу…";
+  dbLoad(function(ok){
+    if(!ok){$("dbinfo").className="note err";$("dbinfo").textContent="Файл базы tides-data.js не найден: загрузите его в репозиторий рядом с index.html.";return}
+    var w=q.split(/\s+/).map(function(x){return /[а-яё]/.test(x)?ruAlts(x):[x]});
+    var qq=q.replace(/ё/g,"е"),kk;for(kk in RUA){if(kk.indexOf(" ")>0&&qq.indexOf(kk)===0){w=[RUA[kk]];break}}
+    var r=DBL.filter(function(o){return w.every(function(al){return al.some(function(x){return o.f.indexOf(x)>=0})})});
+    r.sort(function(a,b){var sa=w[0].some(function(x){return a.f.indexOf(x)===0})?0:1,sb=w[0].some(function(x){return b.f.indexOf(x)===0})?0:1;return sa-sb||a.k-b.k||a.n.localeCompare(b.n)});
+    dbFill(r.slice(0,60));
+  });
+};
+$("dbq").addEventListener("keydown",function(e){if(e.key==="Enter")$("dbfind").onclick()});
+$("dbnear").onclick=function(){
+  var la=getC("pl","N"),lo=getC("pn","E"),m=$("dbinfo");
+  if(isNaN(la)||isNaN(lo)){m.className="note err";m.textContent="Введите координаты в блоке «Порт» ниже или нажмите там «Взять координаты с GPS».";return}
+  m.className="note";m.textContent="Загружаю базу…";
+  dbLoad(function(ok){
+    if(!ok){m.className="note err";m.textContent="Файл базы tides-data.js не найден.";return}
+    var a=DBL.map(function(o){var dla=(o.la-la)*D,dlo=(o.lo-lo)*D,x=Math.sin(dla/2)*Math.sin(dla/2)+Math.cos(la*D)*Math.cos(o.la*D)*Math.sin(dlo/2)*Math.sin(dlo/2);return {o:o,d:2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))*3440.065}});
+    a.sort(function(x,y){return x.d-y.d});a=a.slice(0,15);
+    dbFill(a.map(function(x){return x.o}),a.map(function(x){return x.d}));
+  });
+};
+function dbRun(){
+  var o=DBSEL,m=$("dbinfo");if(!o||!window.TIDEDB)return;
+  var z=zoneT(),ds=$("pdate").value.split("-");if(ds.length<3||isNaN(z))return;
+  var s0=Date.UTC(+ds[0],+ds[1]-1,+ds[2])-z*3600000,a=Math.floor(s0/3600000)*3600000-48*3600000,b=s0+10*86400000,ms=[],st=360000,i;
+  for(i=a;i<=b;i+=st)ms.push(i);
+  var R=TIDEDB.ref,rr,sub=null;
+  if(o.k){sub=TIDEDB.sub[o.i];rr=R[sub[5]]}else rr=R[o.i];
+  var h=tPredict(rr[7],TIDEDB.names,ms),z0=rr[6],cd=rr[5],ex=tExtremes(ms,h).map(function(e){return [e[0],e[1],e[2]+z0]});
+  if(sub){
+    ex=ex.map(function(e){
+      var hi=e[1],hv=hi?sub[7]:sub[8],tm=(hi?sub[9]:sub[10])*60000;
+      return [e[0]+tm,hi,sub[6]?e[2]*hv:e[2]+hv];
+    }).sort(function(x,y){return x[0]-y[0]});
+  }
+  var T=[],V=[],j=0,hs;
+  for(i=a;i<=b;i+=3600000){
+    var v;
+    if(!sub){var idx=Math.round((i-a)/st);v=h[idx]+z0}
+    else{
+      while(j<ex.length-2&&ex[j+1][0]<=i)j++;
+      var e1=ex[j],e2=ex[j+1];
+      v=(i<e1[0]||i>e2[0])?null:e1[2]+(e2[2]-e1[2])*(1-Math.cos(Math.PI*(i-e1[0])/(e2[0]-e1[0])))/2;
+    }
+    T.push(i);V.push(v);
+  }
+  TD={t:T,v:V,ext:ex,label:cd==="MSL"?"среднего уровня моря":"нуля глубин ("+cd+")",db:1};
+  var meta=dbLabel(o)+" · "+o.s+" · "+o.la.toFixed(2)+"°, "+o.lo.toFixed(2)+"°";
+  if(sub)meta+=" · по станции «"+rr[0]+"»";
+  m.className="note";m.textContent=meta+(cd==="MSL"?" · высоты от среднего уровня моря":" · высоты от нуля глубин "+cd)+ZNOTE;ZNOTE="";
+  autoZoneFromDB=0;renderTide();
+}
+var autoZoneFromDB=0;
+["pdate","pdays","pzn","pzs"].forEach(function(id){$(id).addEventListener("change",function(){if(DBSEL&&TD&&TD.db)dbRun()})});
+$("pdate").addEventListener("input",function(){if(DBSEL&&TD&&TD.db)dbRun()});
 </script>
 </body>
 </html>
