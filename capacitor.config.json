@@ -3,6 +3,9 @@
   "appName": "Навигация",
   "webDir": "www",
   "server": {
-    "androidScheme": "https"
+    "url": "https://anvar39.github.io/compass/",
+    "cleartext": false,
+    "androidScheme": "https",
+    "allowNavigation": ["anvar39.github.io"]
   }
 }

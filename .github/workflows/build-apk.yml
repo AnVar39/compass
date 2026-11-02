@@ -20,7 +20,7 @@ jobs:
       - name: Prepare web files and icons
         run: |
           mkdir -p www assets
-          cp index.html manifest.webmanifest sw.js icon-192.png icon-512.png icon-maskable-512.png www/
+          cp index.html manifest.webmanifest sw.js icon-192.png icon-512.png icon-maskable-512.png tides-data.js www/
           cp icon-only.png icon-foreground.png icon-background.png splash.png splash-dark.png assets/
       - name: Add Android platform
         run: npx cap add android
@@ -34,8 +34,23 @@ jobs:
       - name: Build debug APK
         working-directory: android
         run: ./gradlew assembleDebug
-      - name: Rename APK
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk Navigation.apk
+      - name: Sign APK with permanent key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/keystore.p12"
+            BT=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)
+            "${BT}apksigner" sign --ks "$RUNNER_TEMP/keystore.p12" --ks-key-alias "$KEY_ALIAS" --ks-pass env:KEYSTORE_PASSWORD --key-pass env:KEY_PASSWORD --out Navigation.apk "$APK"
+            "${BT}apksigner" verify --print-certs Navigation.apk
+          else
+            echo "::warning::Секреты ключа не заданы, APK подписан временным ключом"
+            cp "$APK" Navigation.apk
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: Navigation-apk
