@@ -31,6 +31,13 @@ jobs:
           sed -i 's#<application#<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <application#' android/app/src/main/AndroidManifest.xml
       - name: Sync
         run: npx cap sync android
+      - name: Set app version
+        run: |
+          BASE=$(node -p "require('./package.json').version.split('.').slice(0,2).join('.')")
+          VERSION="$BASE.${{ github.run_number }}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          sed -i -E "s/versionCode [0-9]+/versionCode ${{ github.run_number }}/; s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" android/app/build.gradle
+          grep -E 'versionCode|versionName' android/app/build.gradle
       - name: Build debug APK
         working-directory: android
         run: ./gradlew assembleDebug
@@ -45,18 +52,18 @@ jobs:
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/keystore.p12"
             BT=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)
-            "${BT}apksigner" sign --ks "$RUNNER_TEMP/keystore.p12" --ks-key-alias "$KEY_ALIAS" --ks-pass env:KEYSTORE_PASSWORD --key-pass env:KEY_PASSWORD --out Navigation.apk "$APK"
-            "${BT}apksigner" verify --print-certs Navigation.apk
+            "${BT}apksigner" sign --ks "$RUNNER_TEMP/keystore.p12" --ks-key-alias "$KEY_ALIAS" --ks-pass env:KEYSTORE_PASSWORD --key-pass env:KEY_PASSWORD --out "Navigation-$VERSION.apk" "$APK"
+            "${BT}apksigner" verify --print-certs "Navigation-$VERSION.apk"
           else
             echo "::warning::Секреты ключа не заданы, APK подписан временным ключом"
-            cp "$APK" Navigation.apk
+            cp "$APK" "Navigation-$VERSION.apk"
           fi
       - uses: actions/upload-artifact@v4
         with:
-          name: Navigation-apk
-          path: Navigation.apk
+          name: Navigation-${{ env.VERSION }}
+          path: Navigation-${{ env.VERSION }}.apk
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: apk-${{ github.run_number }}
-          name: Навигация (сборка ${{ github.run_number }})
-          files: Navigation.apk
+          tag_name: v${{ env.VERSION }}
+          name: Навигация ${{ env.VERSION }}
+          files: Navigation-${{ env.VERSION }}.apk
