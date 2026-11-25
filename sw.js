@@ -1,4 +1,4 @@
-var C="compass-v19";
+var C="compass-v20";
 var F=["./","index.html","manifest.webmanifest","icon-192.png","icon-512.png","icon-maskable-512.png"];
 var OPT=["tides-data.js"];
 self.addEventListener("install",function(e){
