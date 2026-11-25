@@ -115,7 +115,7 @@ section>.note{padding:0 4px;font-size:12.5px;opacity:.9}
 </style>
 </head>
 <body>
-<div class="menu" id="menu"><button id="menuBtn" aria-haspopup="true"><span class="mb-ic">⚓</span><span class="mb-tx"><small>Навигация</small><span id="menuLbl">🚢 Расчёт ETA</span></span><span class="mb-ch">▾</span></button><div class="tabs" id="tabsMenu"><button class="tab on" data-t="t2">🚢 Расчёт ETA</button><button class="tab" data-t="t1">🧭 Расчёт поправки компаса</button><button class="tab" data-t="t3">🌊 Приливы</button><button class="tab" data-t="t4">📖 Таблицы ATT</button><button class="tab" data-t="t6">🌟 Азимуты светил</button><button class="tab" data-t="t5">⚖️ Расчёт метацентрической высоты по периоду качки</button></div></div>
+<div class="menu" id="menu"><button id="menuBtn" aria-haspopup="true"><span class="mb-ic">⚓</span><span class="mb-tx"><small>Навигация</small><span id="menuLbl">🚢 Расчёт ETA</span></span><span class="mb-ch">▾</span></button><div class="tabs" id="tabsMenu"><button class="tab on" data-t="t2">🚢 Расчёт ETA</button><button class="tab" data-t="t7">📏 Расстояния</button><button class="tab" data-t="t1">🧭 Расчёт поправки компаса</button><button class="tab" data-t="t3">🌊 Приливы</button><button class="tab" data-t="t4">📖 Таблицы ATT</button><button class="tab" data-t="t6">🌟 Азимуты светил</button><button class="tab" data-t="t5">⚖️ Расчёт метацентрической высоты по периоду качки</button></div></div>
 <section id="t1" hidden><div class="seg" id="t1seg"><button data-p="res">📊 Результат</button><button data-p="in" class="on">✏️ Ввод данных</button></div><div id="t1wrap"><div id="t1in">
 
 <div class="card">
@@ -164,7 +164,7 @@ section>.note{padding:0 4px;font-size:12.5px;opacity:.9}
 <div class="note" id="warn"></div>
 </div>
 
-<div class="note">Данные МАЕ и МТ вычисляются внутри приложения теми же величинами, что в таблицах (GHA, Dec, d, SHA, SD, ур. времени, амплитуда, рефракция, параллакс, наклонение). Солнце ≈ ±0,01°. Звёзды: координаты J2000 + собственное движение, прецессия, нутация и аберрация — SHA и Dec считаются на любую дату. Для ответственных случаев сверяйте с печатным МАЕ. Луна и планеты не включены.</div>
+<div class="note">Данные МАЕ и МТ вычисляются внутри приложения теми же величинами, что в таблицах (GHA, Dec, d, SHA, SD, ур. времени, амплитуда, рефракция, параллакс, наклонение). Солнце ≈ ±0,01°. Звёзды: координаты J2000 + собственное движение, прецессия, нутация и аберрация — SHA и Dec считаются на любую дату. Для ответственных случаев сверяйте с печатным МАЕ. Луна: основные члены теории ELP (точность ≈ 1′), высота с поправкой за параллакс. Планеты не включены.</div>
 
 </div>
 </div>
@@ -216,6 +216,55 @@ section>.note{padding:0 4px;font-size:12.5px;opacity:.9}
 </div>
 </div></div>
 <div class="note">Все расчёты идут через UTC. Пояс E: UTC = местное − №; пояс W: UTC = местное + №. Летнее время не учитывается — введите фактический пояс судового времени. Введённые данные запоминаются на этом устройстве.</div>
+</section>
+<section id="t7" hidden>
+<div class="duo">
+<div class="card">
+<h2>Пункт отхода A</h2>
+<label>Порт (по-русски или латиницей)</label>
+<div class="row"><div><input id="xaq" placeholder="например Новороссийск"></div><div style="flex:0 0 auto"><button class="sec" id="xaf" style="margin:0;width:auto;padding:12px 14px">🔎</button></div></div>
+<select id="xar" hidden style="margin-top:8px"></select>
+<label>Широта φ</label>
+<div class="c3"><input id="xad" inputmode="numeric" placeholder="град"><input id="xam" inputmode="decimal" placeholder="мин.м"><select id="xas"><option>N</option><option>S</option></select></div>
+<label>Долгота λ</label>
+<div class="c3"><input id="xbd" inputmode="numeric" placeholder="град"><input id="xbm" inputmode="decimal" placeholder="мин.м"><select id="xbs"><option>E</option><option>W</option></select></div>
+<button class="sec sm" id="xgps">📍 Моё место по GPS</button>
+<div class="note" id="xam1"></div>
+</div>
+<div class="card">
+<h2>Пункт прихода B</h2>
+<label>Порт (по-русски или латиницей)</label>
+<div class="row"><div><input id="xcq" placeholder="например Стамбул"></div><div style="flex:0 0 auto"><button class="sec" id="xcf" style="margin:0;width:auto;padding:12px 14px">🔎</button></div></div>
+<select id="xcr" hidden style="margin-top:8px"></select>
+<label>Широта φ</label>
+<div class="c3"><input id="xcd" inputmode="numeric" placeholder="град"><input id="xcm" inputmode="decimal" placeholder="мин.м"><select id="xcs"><option>N</option><option>S</option></select></div>
+<label>Долгота λ</label>
+<div class="c3"><input id="xed" inputmode="numeric" placeholder="град"><input id="xem" inputmode="decimal" placeholder="мин.м"><select id="xes"><option>E</option><option>W</option></select></div>
+<button class="sec sm" id="xswap">⇅ Поменять A и B местами</button>
+<div class="note" id="xam2"></div>
+</div>
+</div>
+<div class="note err" id="xerr"></div>
+<div class="card ph" id="xph"><div class="ic">📏</div><div>Выберите порты или введите координаты A и B — расстояние посчитается сразу.</div></div>
+<div class="card" id="xout" hidden>
+<h2>Расстояние A → B</h2>
+<div class="hero"><div class="lbl">По ортодромии (дуга большого круга)</div><div class="hero-v" id="xgc"></div><div class="hero-s" id="xgcs"></div></div>
+<div class="tiles" id="xtiles"></div>
+<table id="xtb"></table>
+<button id="xeta">🚢 Перенести расстояние в расчёт ETA</button>
+<div class="note" style="font-size:11px">Справочник портов: sea-ports (MIT, © 2016 marchah), 1,6 тыс. портов; координаты приблизительные (часто по центру города).</div>
+<div class="note">Это расстояние по прямой на шаре (ортодромия) и по постоянному курсу (локсодромия) без учёта берегов, островов, каналов и рекомендованных путей. Расстояния в таблицах морских расстояний (адм. № 9010) считаются по рекомендованным путям и обычно больше. Для планирования перехода используйте таблицы — их можно сохранить ниже.</div>
+</div>
+<div class="card">
+<h2>Мои расстояния (из таблиц № 9010)</h2>
+<div class="note" style="margin-top:0">Внесите расстояния из печатных «Таблиц морских расстояний» (адм. № 9010) или своего опыта. Они сохраняются на этом устройстве, нажатие на строку передаёт расстояние в ETA.</div>
+<div class="row"><div><label>Откуда</label><input id="xmf"></div><div><label>Куда</label><input id="xmt"></div></div>
+<div class="row"><div><label>Расстояние, мили</label><input id="xmd" inputmode="decimal"></div><div><label>Примечание</label><input id="xmn" placeholder="напр. через Босфор"></div></div>
+<button class="sec" id="xmadd">➕ Добавить в мой справочник</button>
+<div class="note err" id="xmerr"></div>
+<label>Поиск по справочнику</label><input id="xmq" placeholder="название порта">
+<table id="xmtb"></table>
+</div>
 </section>
 
 <section id="t3" hidden>
@@ -442,7 +491,7 @@ section>.note{padding:0 4px;font-size:12.5px;opacity:.9}
 var D=Math.PI/180;
 var ST=[["Alpheratz",0,8,23.26,29,5,25.6,135.68,-162.95],["Ankaa",0,26,17.05,-42,18,21.5,232.76,-353.64],["Schedar",0,40,30.44,56,32,14.4,50.36,-32.17],["Diphda",0,43,35.37,-17,59,11.8,232.79,32.71],["Achernar",1,37,42.85,-57,14,12.3,87.0,-38.2],["Hamal",2,7,10.41,23,27,44.7,190.73,-145.77],["Acamar",2,58,15.68,-40,18,17.0,-53,20],["Menkar",3,2,16.77,4,5,23.6,-11.81,-78.76],["Mirfak",3,24,19.37,49,51,40.2,23.75,-26.23],["Aldebaran",4,35,55.24,16,30,33.5,62.78,-189.36],["Rigel",5,14,32.27,-8,12,5.9,1.31,0.50],["Capella",5,16,41.36,45,59,52.8,75.52,-427.13],["Bellatrix",5,25,7.86,6,20,58.9,-8.75,-13.28],["Elnath",5,26,17.51,28,36,26.8,23.28,-174.22],["Alnilam",5,36,12.81,-1,12,6.9,1.49,-1.06],["Betelgeuse",5,55,10.31,7,24,25.4,27.54,11.30],["Canopus",6,23,57.11,-52,41,44.4,19.93,23.24],["Sirius",6,45,8.92,-16,42,58.0,-546.01,-1223.07],["Adhara",6,58,37.55,-28,58,19.5,2.63,2.29],["Procyon",7,39,18.12,5,13,30.0,-714.59,-1036.80],["Pollux",7,45,18.95,28,1,34.3,-625.69,-45.95],["Avior",8,22,30.84,-59,30,34.1,-25.34,22.72],["Suhail",9,7,59.76,-43,25,57.3,-23.21,14.28],["Miaplacidus",9,13,11.98,-69,43,1.9,-157.66,108.91],["Alphard",9,27,35.24,-8,39,31.2,-14.49,33.25],["Regulus",10,8,22.31,11,58,2.0,-249.40,4.91],["Dubhe",11,3,43.67,61,45,3.7,-136.46,-35.25],["Denebola",11,49,3.58,14,34,19.4,-499.02,-113.78],["Gienah",12,15,48.37,-17,32,30.9,-158.61,-21.86],["Acrux",12,26,35.90,-63,5,56.7,-35.83,-14.86],["Gacrux",12,31,9.96,-57,6,47.6,27.94,-264.33],["Alioth",12,54,1.75,55,57,35.4,111.91,-8.24],["Spica",13,25,11.58,-11,9,40.8,-42.35,-30.67],["Alkaid",13,47,32.44,49,18,47.8,-121.23,-15.56],["Hadar",14,3,49.41,-60,22,22.9,-33.27,-23.16],["Menkent",14,6,40.95,-36,22,11.8,-519.29,-517.87],["Arcturus",14,15,39.67,19,10,56.7,-1093.39,-2000.06],["Rigil Kent.",14,39,36.49,-60,50,2.4,-3679.25,473.67],["Zubenelgenubi",14,50,52.71,-16,2,30.4,-105.69,-69.00],["Kochab",14,50,42.33,74,9,19.8,-32.29,11.91],["Alphecca",15,34,41.27,26,42,52.9,120.38,-89.44],["Antares",16,29,24.46,-26,25,55.2,-10.16,-23.21],["Atria",16,48,39.90,-69,1,39.8,17.85,-32.92],["Sabik",17,10,22.69,-15,43,29.7,41.16,97.65],["Shaula",17,33,36.52,-37,6,13.8,-8.90,-29.95],["Rasalhague",17,34,56.07,12,33,36.1,110.08,-222.61],["Eltanin",17,56,36.37,51,29,20.0,-8.52,-23.05],["Kaus Austr.",18,24,10.32,-34,23,4.6,-39.61,-124.05],["Vega",18,36,56.34,38,47,1.3,200.94,286.23],["Nunki",18,55,15.93,-26,17,48.2,13.87,-52.65],["Altair",19,50,47.00,8,52,6.0,536.82,385.54],["Peacock",20,25,38.86,-56,44,6.3,7.71,-86.15],["Deneb",20,41,25.92,45,16,49.2,1.56,1.55],["Enif",21,44,11.16,9,52,30.0,30.02,1.38],["Al Na\u2019ir",22,8,13.98,-46,57,39.5,127.60,-147.91],["Fomalhaut",22,57,39.05,-29,37,20.1,329.22,-164.22],["Markab",23,4,45.65,15,12,18.9,61.10,-42.56],["Polaris",2,31,49.09,89,15,50.8,44.48,-11.85]];
 function $(i){return document.getElementById(i)}
-$("body").innerHTML="<option value=\"sun\">Солнце (центр)</option>"+ST.map(function(s,i){return "<option value=\""+i+"\">"+(i<57?(i+1)+" ":"")+s[0]+"</option>"}).join("");
+$("body").innerHTML="<option value=\"sun\">Солнце (центр)</option><option value=\"moon\">Луна (центр)</option>"+ST.map(function(s,i){return "<option value=\""+i+"\">"+(i<57?(i+1)+" ":"")+s[0]+"</option>"}).join("");
 function n(v){return parseFloat(String(v).replace(",","."))}
 function n360(x){x%=360;return x<0?x+360:x}
 function n180(x){x=n360(x);return x>180?x-360:x}
@@ -531,7 +580,7 @@ function calc(){
   var Y=+ds[0],M=+ds[1]-1,Dd=+ds[2];
   var utc=Date.UTC(Y,M,Dd,+ts[0],+ts[1],+(ts[2]||0))-tzh*3600000;
   var t0=Math.floor(utc/3600000)*3600000,u=new Date(utc),w=[];
-  var b=$("body").value,isSun=(b==="sun"),dec,gha,name,R=[];
+  var b=$("body").value,isSun=(b==="sun"),isMoon=(b==="moon"),mo=null,dec,gha,name,R=[];
   R.push(["#","МАЕ — данные на момент наблюдения"]);
   R.push(["Время UTC",u.getUTCFullYear()+"-"+pad(u.getUTCMonth()+1,2)+"-"+pad(u.getUTCDate(),2)+" "+pad(u.getUTCHours(),2)+":"+pad(u.getUTCMinutes(),2)+":"+pad(u.getUTCSeconds(),2)]);
   R.push(["Ближайший целый час UTC",pad(new Date(t0).getUTCHours(),2)+":00"]);
@@ -550,6 +599,21 @@ function calc(){
     R.push(["Полудиаметр SD",(sn.sd*60).toFixed(1)+"′"]);
     var e=sn.eot,es=Math.abs(e);
     R.push(["Уравнение времени",(e>=0?"+":"−")+Math.floor(es)+"м "+Math.round((es%1)*60)+"с"]);
+  }else if(isMoon){
+    var m0=moonAt(t0),m1=moonAt(t0+3600000);mo=moonAt(utc);
+    gha=mo.gha;dec=mo.dec;name="Луна";
+    var mdh=m1.dec-m0.dec,vv=n360(m1.gha-m0.gha)-(14+19/60);
+    R.push(["GHA ☾ на целый час",dm(m0.gha)]);
+    R.push(["Приращение GHA за "+Math.floor(smin)+"м "+Math.round((smin%1)*60)+"с",dm(n360(mo.gha-m0.gha))]);
+    R.push(["v (поправка к приращению 14°19′/ч)",mn(vv)]);
+    R.push(["GHA ☾",dm(gha)]);
+    R.push(["Dec ☾ на целый час",dm(m0.dec)]);
+    R.push(["d (изменение Dec за час)",mn(mdh)]);
+    R.push(["Поправка к Dec (d·t)",mn(mdh*smin/60)]);
+    R.push(["Dec ☾",dm(dec)]);
+    R.push(["Горизонтальный параллакс HP",(mo.hp*60).toFixed(1)+"′"]);
+    R.push(["Полудиаметр SD",(mo.sd*60).toFixed(1)+"′"]);
+    R.push(["Фаза",moonPhase(mo.elong)+", освещено "+Math.round(mo.illum*100)+" %"]);
   }else{
     var s=ST[+b],st=starAt(utc,s),st0=starAt(t0,s);name=s[0];
     var g0=n360(gmst(t0)+st0.eq),g1=n360(gmst(utc)+st.eq);
@@ -566,7 +630,8 @@ function calc(){
   var r=azAlt(lat,dec,lha),az=r.az,h=r.h;
   var eye=n($("eye").value),dip=isNaN(eye)||eye<0?0:1.76*Math.sqrt(eye)/60;
   R.push(["#","МТ — расчёт пеленга и поправок"]);
-  R.push(["Высота светила h (геом.)",dm(h)]);
+  R.push(["Высота светила h (геом."+(isMoon?", геоцентр.":"")+")",dm(h)]);
+  if(isMoon){var px=mo.hp*Math.cos(h*D);R.push(["Параллакс в высоте HP·cos h",(px*60).toFixed(1)+"′"]);h-=px;R.push(["Высота топоцентрическая",dm(h)])}
   R.push(["Истинный пеленг ИП (круговой)",az.toFixed(1)+"°"]);
   R.push(["Азимут (четвертной)",quad(az)]);
   var rf=refr(h);
@@ -595,6 +660,20 @@ function calc(){
     }else R.push(["Восход/заход","нет (полярный день или ночь)"]);
     if(Math.abs(h-h0)<1.5)w.push("Солнце у горизонта: режим восхода/захода применим.");
   }
+  if(isMoon){
+    var day0=Date.UTC(Y,M,Dd)-tzh*3600000,stp=600000,pv=null,ev=[],trn=null;
+    for(var q=0;q<=144;q++){var tq=day0+q*stp,mq=moonAt(tq),aq=azAlt(lat,mq.dec,n360(mq.gha+lon)),fq=aq.h-(0.7275*mq.hp-0.5667-dip),lq=n180(mq.gha+lon);
+      if(pv&&(pv.f<0)!==(fq<0)){var tt=pv.t+pv.f/(pv.f-fq)*stp,mt=moonAt(tt);ev.push([fq>0?"Восход Луны":"Заход Луны",tt,azAlt(lat,mt.dec,n360(mt.gha+lon)).az])}
+      if(pv&&pv.l<0&&lq>=0&&lq-pv.l<90){var tt2=pv.t+(-pv.l)/(lq-pv.l)*stp,m2=moonAt(tt2),a2=azAlt(lat,m2.dec,n360(m2.gha+lon));trn=[tt2,a2.h-m2.hp*Math.cos(a2.h*D)]}
+      pv={t:tq,f:fq,l:lq}}
+    var lt=function(t){return hm((t-day0)/3600000)};
+    R.push(["#","МАЕ — Луна на дату (местное время по поясу)"]);
+    ev.concat(trn?[["Кульминация (верхняя)",trn[0],null]]:[]).sort(function(a,b){return a[1]-b[1]}).forEach(function(e){R.push([e[0],lt(e[1])+(e[2]!=null?" · ИП "+e[2].toFixed(1)+"°":" · h "+trn[1].toFixed(1)+"°")])});
+    if(!ev.some(function(e){return e[0]==="Восход Луны"}))R.push(["Восход Луны","нет в эти сутки"]);
+    if(!ev.some(function(e){return e[0]==="Заход Луны"}))R.push(["Заход Луны","нет в эти сутки"]);
+    if(!trn)R.push(["Кульминация (верхняя)","нет в эти сутки"]);
+    if(mo.illum<0.08)w.push("Луна близка к новолунию: диск почти не виден.");
+  }
   var dk=n180(az-kp),kind=$("ctype").value;
   $("dk").textContent=(kind==="gyro"?"ΔГК = ":"ΔK = ")+(dk>=0?"+":"−")+Math.abs(dk).toFixed(1)+"°";
   $("dkl").textContent=name+" · "+(dk>=0?"E (плюс)":"W (минус)")+" · ΔK = ИП − КП";
@@ -615,7 +694,7 @@ function calc(){
 $("calc").onclick=calc;
 document.querySelectorAll(".tab").forEach(function(b){b.onclick=function(){
   document.querySelectorAll(".tab").forEach(function(x){x.classList.toggle("on",x===b)});
-  ["t1","t2","t3","t4","t5","t6"].forEach(function(id){$(id).hidden=b.dataset.t!==id});if(b.dataset.t==="t6")skyCalc();window.scrollTo(0,0);if(b.dataset.t==="t1"&&window.t1Init)window.t1Init();
+  ["t1","t2","t3","t4","t5","t6","t7"].forEach(function(id){$(id).hidden=b.dataset.t!==id});if(b.dataset.t==="t6")skyCalc();window.scrollTo(0,0);if(b.dataset.t==="t1"&&window.t1Init)window.t1Init();
 }});
 var TMODE="eta",WD=["вс","пн","вт","ср","чт","пт","сб"];
 function zof(nid,sid){return ($(sid).value==="E"?1:-1)*n($(nid).value)}
@@ -1136,6 +1215,94 @@ function dbRun(){
 var autoZoneFromDB=0;
 ["pdate","pdays","pzn","pzs"].forEach(function(id){$(id).addEventListener("change",function(){if(DBSEL&&TD&&TD.db)dbRun()})});
 $("pdate").addEventListener("input",function(){if(DBSEL&&TD&&TD.db)dbRun()});
+var RE=3440.065;
+var XN={a:"",b:""},PSK=null,PLOAD=0;
+var PAL={"стамбул":"istanbul","санкт петербург":"saint petersburg","петербург":"saint petersburg","питер":"saint petersburg","спб":"saint petersburg","пирей":"piraeus","гамбург":"hamburg","антверпен":"antwerp","суэц":"suez","сингапур":"singapore","гонконг":"hong kong","шанхай":"shanghai","пусан":"busan","токио":"tokyo","иокогама":"yokohama","генуя":"genoa","марсель":"marseille","лиссабон":"lisbon","дубай":"dubai","нью йорк":"new york","гетеборг":"goteborg","копенгаген":"copenhagen","стокгольм":"stockholm","неаполь":"naples","венеция":"venice","констанца":"constanta","хельсинки":"helsingfors","лимассол":"limassol","джидда":"jeddah","мумбаи":"mumbai","гавр":"le havre","саутгемптон":"southampton","петропавловск":"petropavlovsk","приморск":"primorsk","феодосия":"feodosiya","ейск":"yeysk","черноморск":"chornomorsk","александрия":"alexandria","валенсия":"valencia","алжир":"alger","касабланка":"casablanca","нагоя":"nagoya","циндао":"qingdao","тяньцзинь":"tianjin","дальян":"dalian","нинбо":"ningbo","кобе":"kobe","осака":"osaka","порт саид":"port said","бейрут":"beirut","хайфа":"haifa","бриндизи":"brindisi","салоники":"thessaloniki","гданьск":"gdansk","щецин":"szczecin","клайпеда":"klaipeda"};
+function psk(t){t=String(t).toLowerCase().replace(/ё/g,"е").replace(/[а-я]/g,function(c){return RUTR[c]!=null?RUTR[c]:""});return t.replace(/kh/g,"h").replace(/[yj]/g,"i").replace(/[^a-z]/g,"").replace(/(.)\1+/g,"$1")}
+function pLoad(cb){
+  if(window.PORTDB){pInit();cb(true);return}
+  if(PLOAD===1){setTimeout(function(){pLoad(cb)},200);return}PLOAD=1;
+  var sc=document.createElement("script");sc.src="ports-data.js";
+  sc.onload=function(){PLOAD=2;pInit();cb(true)};sc.onerror=function(){PLOAD=0;cb(false)};document.head.appendChild(sc);
+}
+function pInit(){if(PSK)return;PSK=PORTDB.map(function(o){return psk(o[0])+" "+psk(o[1])})}
+function pQuery(q){
+  q=q.trim().toLowerCase().replace(/ё/g,"е").replace(/[-_,]/g," ").replace(/\s+/g," ");var k;
+  for(k in PAL){if(q.indexOf(k)===0||(q.length>=4&&k.indexOf(q)===0)){q=PAL[k]+q.slice(k.length);break}}
+  var w=q.split(" ").map(psk).filter(Boolean);if(!w.length)return [];
+  var r=[];PORTDB.forEach(function(o,i){var f=PSK[i];if(w.every(function(x){return f.indexOf(x)>=0}))r.push(o)});
+  r.sort(function(a,b){var sa=psk(a[0]).indexOf(w[0])===0?0:1,sb=psk(b[0]).indexOf(w[0])===0?0:1;return sa-sb||a[0].localeCompare(b[0])});
+  return r.slice(0,60);
+}
+function xPort(qId,rId,mId,pLa,pLo,key){
+  var q=$(qId).value.trim(),m=$(mId);if(!q)return;m.className="note";m.textContent="Загружаю справочник портов…";
+  pLoad(function(ok){
+    if(!ok){m.className="note err";m.textContent="Справочник портов не загрузился. Введите координаты вручную.";return}
+    var r=pQuery(q),s=$(rId);
+    if(!r.length){s.hidden=true;m.className="note err";m.textContent="Порт не найден. Попробуйте латиницей или введите координаты вручную.";return}
+    s.innerHTML=r.map(function(o,j){return "<option value=\""+j+"\">"+esc(o[0])+" — "+esc(o[1])+"</option>"}).join("");s.hidden=r.length<2;
+    var pick=function(j){var o=r[j];setC(pLa,o[2],"N","S");setC(pLo,o[3],"E","W");XN[key]=o[0];m.className="note";m.textContent="Выбрано: "+o[0]+", "+o[1]+" · координаты приблизительные"+(o[4]?" (добавлены вручную)":"")+(r.length>1?" · найдено "+r.length+", выберите в списке":"");xcalc()};
+    s.onchange=function(){pick(+this.value)};pick(0);
+  });
+}
+function rhumb(la1,lo1,la2,lo2){
+  var f1=la1*D,f2=la2*D,df=f2-f1,dl=(lo2-lo1)*D;if(Math.abs(dl)>Math.PI)dl=dl>0?dl-2*Math.PI:dl+2*Math.PI;
+  var dp=Math.log(Math.tan(Math.PI/4+f2/2)/Math.tan(Math.PI/4+f1/2)),q=Math.abs(dp)>1e-12?df/dp:Math.cos(f1);
+  return {d:Math.sqrt(df*df+q*q*dl*dl)*RE,c:n360(Math.atan2(dl,dp)/D),dl:dl/D}
+}
+function gcirc(la1,lo1,la2,lo2){
+  var f1=la1*D,f2=la2*D,dl=(lo2-lo1)*D,a=Math.sin((f2-f1)/2),b=Math.sin(dl/2),x=a*a+Math.cos(f1)*Math.cos(f2)*b*b,s=2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+  var c1=n360(Math.atan2(Math.sin(dl)*Math.cos(f2),Math.cos(f1)*Math.sin(f2)-Math.sin(f1)*Math.cos(f2)*Math.cos(dl))/D);
+  var c2=n360(Math.atan2(Math.sin(-dl)*Math.cos(f1),Math.cos(f2)*Math.sin(f1)-Math.sin(f2)*Math.cos(f1)*Math.cos(dl))/D+180);
+  var vx=null;var cc=Math.cos(f1)*Math.sin(c1*D);if(Math.abs(cc)<1){var fv=Math.acos(Math.abs(cc))/D*(Math.cos(c1*D)>=0?1:-1);vx=fv}
+  return {d:s*RE,c1:c1,c2:c2,vx:vx}
+}
+function xcalc(){
+  var la1=getC("xa","N"),lo1=getC("xb","E"),la2=getC("xc","N"),lo2=getC("xe","E"),e=$("xerr");e.textContent="";$("xout").hidden=true;$("xph").hidden=false;
+  if([la1,lo1,la2,lo2].some(isNaN))return;
+  if(Math.abs(la1)>89.9||Math.abs(la2)>89.9||Math.abs(lo1)>180||Math.abs(lo2)>180){e.textContent="Проверьте координаты: широта до 89°, долгота до 180°.";return}
+  var g=gcirc(la1,lo1,la2,lo2),r=rhumb(la1,lo1,la2,lo2);
+  if(g.d<0.05){e.textContent="Пункты A и B совпадают.";return}
+  $("xgc").textContent=nf(g.d,g.d<100?1:0)+" миль";
+  $("xgcs").textContent=(XN.a&&XN.b?XN.a+" → "+XN.b+" · ":"")+"начальный курс "+g.c1.toFixed(1)+"°";
+  var sv=r.d-g.d,spd=n($("spd").value);
+  var T=[["Локсодромия",nf(r.d,r.d<100?1:0)+" миль"],["Курс по локсодромии",r.c.toFixed(1)+"°"],["Выигрыш ортодромии",nf(sv,1)+" миль"+(r.d>0?" ("+nf(sv/r.d*100,1)+" %)":"")],["В пути при "+(isNaN(spd)||spd<=0?"12":nf(spd,1))+" уз",durS(g.d/(isNaN(spd)||spd<=0?12:spd)*60)]];
+  $("xtiles").innerHTML=T.map(function(x){return "<div class='tile'><span>"+x[0]+"</span><b>"+x[1]+"</b></div>"}).join("");
+  var R=[["Пункт A",(la1>=0?"N ":"S ")+dm(Math.abs(la1))+"<br>"+(lo1>=0?"E ":"W ")+dm(Math.abs(lo1))],["Пункт B",(la2>=0?"N ":"S ")+dm(Math.abs(la2))+"<br>"+(lo2>=0?"E ":"W ")+dm(Math.abs(lo2))],["Разность широт РШ",nf(Math.abs(la2-la1)*60,1)+"′ "+(la2>=la1?"к N":"к S")],["Разность долгот РД",nf(Math.abs(r.dl)*60,1)+"′ "+(r.dl>=0?"к E":"к W")],["Ортодромия: начальный курс",g.c1.toFixed(1)+"°"],["Ортодромия: конечный курс",g.c2.toFixed(1)+"°"]];
+  if(g.vx!=null&&Math.cos(g.c1*D)*Math.cos(g.c2*D)>=0)g.vx=null;
+  if(g.vx!=null)R.push(["Вертекс (наибольшая широта на пути)",(g.vx>=0?"N ":"S ")+dm(Math.abs(g.vx))]);
+  R.push(["Локсодромия: курс",r.c.toFixed(1)+"° ("+quad(r.c)+")"]);
+  $("xtb").innerHTML=R.map(function(x){return "<tr><td>"+x[0]+"</td><td>"+x[1]+"</td></tr>"}).join("");
+  $("xeta").dataset.d=g.d.toFixed(1);
+  if(g.vx!=null&&Math.abs(g.vx)>65&&Math.abs(g.vx)>Math.max(Math.abs(la1),Math.abs(la2))+1)e.textContent="Ортодромия уходит в высокие широты (вертекс "+Math.abs(g.vx).toFixed(0)+"°): проверьте льды и навигационные ограничения.";
+  $("xout").hidden=false;$("xph").hidden=true;
+}
+function toEta(d){$("dist").value=d;if(TMODE!=="eta")tMode("eta");else tcalc();tSave();document.querySelector("[data-t=t2]").click()}
+var XM=[];try{XM=JSON.parse(localStorage.getItem("my_dist")||"[]")||[]}catch(x){}
+function xmSave(){try{localStorage.setItem("my_dist",JSON.stringify(XM))}catch(x){}}
+function xmDraw(){
+  var q=$("xmq").value.trim().toLowerCase(),L=XM.map(function(o,i){return [o,i]}).filter(function(x){return !q||(x[0].f+" "+x[0].t+" "+(x[0].n||"")).toLowerCase().indexOf(q)>=0});
+  $("xmtb").innerHTML=L.length?L.map(function(x){var o=x[0];return "<tr data-i='"+x[1]+"' style='cursor:pointer'><td><b style='color:var(--tx)'>"+esc(o.f)+" → "+esc(o.t)+"</b>"+(o.n?"<br><span style='font-size:12px'>"+esc(o.n)+"</span>":"")+"</td><td style='white-space:nowrap'>"+nf(o.d,o.d%1?1:0)+" миль <span class='xdel' data-i='"+x[1]+"' style='color:var(--er);padding:4px 2px 4px 10px'>✕</span></td></tr>"}).join(""):"<tr><td>"+(XM.length?"Ничего не найдено.":"Справочник пуст.")+"</td></tr>";
+}
+function esc(t){return String(t).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]})}
+(function(){
+  ["xad","xam","xas","xbd","xbm","xbs","xcd","xcm","xcs","xed","xem","xes"].forEach(function(id){$(id).addEventListener("input",xcalc);$(id).addEventListener("change",xcalc)});
+  ["xad","xam","xbd","xbm"].forEach(function(id){$(id).addEventListener("input",function(){XN.a=""})});
+  ["xcd","xcm","xed","xem"].forEach(function(id){$(id).addEventListener("input",function(){XN.b=""})});
+  $("xaf").onclick=function(){xPort("xaq","xar","xam1","xa","xb","a")};
+  $("xcf").onclick=function(){xPort("xcq","xcr","xam2","xc","xe","b")};
+  $("xaq").addEventListener("keydown",function(e){if(e.key==="Enter")$("xaf").onclick()});
+  $("xcq").addEventListener("keydown",function(e){if(e.key==="Enter")$("xcf").onclick()});
+  $("xgps").onclick=function(){var m=$("xam1");if(!navigator.geolocation){m.className="note err";m.textContent="GPS недоступен.";return}m.className="note";m.textContent="Определяю координаты…";
+    navigator.geolocation.getCurrentPosition(function(p){setC("xa",p.coords.latitude,"N","S");setC("xb",p.coords.longitude,"E","W");XN.a="Моё место";m.textContent="Координаты GPS (точность ≈ "+Math.round(p.coords.accuracy)+" м)";xcalc()},function(e){m.className="note err";m.textContent="GPS не получен: "+e.message},{enableHighAccuracy:true,timeout:15000})};
+  $("xswap").onclick=function(){[["xad","xcd"],["xam","xcm"],["xas","xcs"],["xbd","xed"],["xbm","xem"],["xbs","xes"],["xaq","xcq"]].forEach(function(p){var t=$(p[0]).value;$(p[0]).value=$(p[1]).value;$(p[1]).value=t});var t=XN.a;XN.a=XN.b;XN.b=t;$("xar").hidden=$("xcr").hidden=true;xcalc()};
+  $("xeta").onclick=function(){if(this.dataset.d)toEta(this.dataset.d)};
+  $("xmadd").onclick=function(){var f=$("xmf").value.trim(),t=$("xmt").value.trim(),d=n($("xmd").value),e=$("xmerr");e.textContent="";
+    if(!f||!t||isNaN(d)||d<=0){e.textContent="Заполните «Откуда», «Куда» и расстояние больше нуля.";return}
+    XM.push({f:f,t:t,d:d,n:$("xmn").value.trim()});XM.sort(function(a,b){return a.f.localeCompare(b.f,"ru")||a.t.localeCompare(b.t,"ru")});xmSave();["xmf","xmt","xmd","xmn"].forEach(function(id){$(id).value=""});xmDraw()};
+  $("xmtb").onclick=function(e){var x=e.target.closest(".xdel");if(x){var i=+x.dataset.i;if(confirm("Удалить «"+XM[i].f+" → "+XM[i].t+"»?")){XM.splice(i,1);xmSave();xmDraw()}return}var tr=e.target.closest("tr[data-i]");if(tr)toEta(String(XM[+tr.dataset.i].d))};
+  $("xmq").addEventListener("input",xmDraw);xmDraw();
+})();
 </script>
 </body>
 </html>

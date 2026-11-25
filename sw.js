@@ -1,6 +1,6 @@
-var C="compass-v21";
+var C="compass-v23";
 var F=["./","index.html","manifest.webmanifest","icon-192.png","icon-512.png","icon-maskable-512.png"];
-var OPT=["tides-data.js"];
+var OPT=["tides-data.js","ports-data.js"];
 self.addEventListener("install",function(e){
   e.waitUntil(caches.open(C).then(function(c){
     var req=Promise.all(F.map(function(u){

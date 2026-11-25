@@ -20,7 +20,7 @@ jobs:
       - name: Prepare web files and icons
         run: |
           mkdir -p www assets
-          cp index.html manifest.webmanifest sw.js icon-192.png icon-512.png icon-maskable-512.png tides-data.js www/
+          cp index.html manifest.webmanifest sw.js icon-192.png icon-512.png icon-maskable-512.png tides-data.js ports-data.js www/
           cp icon-only.png icon-foreground.png icon-background.png splash.png splash-dark.png assets/
       - name: Add Android platform
         run: npx cap add android
