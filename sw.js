@@ -1,4 +1,4 @@
-var C="compass-v23";
+var C="compass-v24";
 var F=["./","index.html","manifest.webmanifest","icon-192.png","icon-512.png","icon-maskable-512.png"];
 var OPT=["tides-data.js","ports-data.js"];
 self.addEventListener("install",function(e){
