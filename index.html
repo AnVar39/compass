@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0e1621">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#eef2f7">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b131d">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
@@ -12,64 +13,110 @@
 <meta name="apple-mobile-web-app-title" content="Навигация">
 <title>Навигация</title>
 <style>
-:root{--bg:#f4f6f9;--card:#fff;--tx:#14202e;--mut:#5d6b7c;--ac:#0b63c5;--bd:#d5dce5;--ok:#0a7a45;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1621;--card:#17212f;--tx:#e8eef6;--mut:#93a2b5;--ac:#5aa6ff;--bd:#2b394b;--ok:#4cd391}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,Roboto,sans-serif;padding:12px}
-h1{font-size:20px;margin:4px 0 12px}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px}
-.card h2{font-size:14px;margin:0 0 8px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
-label{display:block;font-size:13px;color:var(--mut);margin:8px 0 2px}
-input,select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font-size:16px}
-.row{display:flex;gap:8px}.row>div{flex:1;min-width:0}
-.c3{display:flex;gap:6px}.c3 input{flex:1.2}.c3 select{flex:1;padding-left:6px;padding-right:2px}
-button{width:100%;padding:12px;border:0;border-radius:10px;background:var(--ac);color:#fff;font-size:16px;font-weight:600;margin-top:10px}
-button.sec{background:transparent;color:var(--ac);border:1px solid var(--ac)}
-table{width:100%;border-collapse:collapse}td{padding:5px 0;border-bottom:1px solid var(--bd);vertical-align:top}td:last-child{text-align:right;font-variant-numeric:tabular-nums;padding-left:8px}
-td.h{font-weight:700;color:var(--ac);padding-top:12px;text-align:left;border-bottom:2px solid var(--ac)}
-.big{font-size:28px;font-weight:700;color:var(--ok);text-align:center;margin:6px 0}
-.note{font-size:13px;color:var(--mut);margin-top:6px}
-.err{color:#d33}
-.tabs{display:flex;gap:6px;margin-bottom:12px}
-.tab{margin:0;padding:10px 6px;background:var(--card);color:var(--tx);border:1px solid var(--bd);font-size:14px}
-.lbl{font-size:12px;color:var(--mut);text-align:center;text-transform:uppercase;letter-spacing:.05em}
-.big2{font-size:34px;font-weight:800;color:var(--ok);text-align:center;margin:2px 0 14px;line-height:1.15}
-.tab.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+:root{--bg:#eef2f7;--card:#fff;--card2:#f6f8fb;--tx:#0f1b2a;--mut:#5b6b7f;--ac:#0a5cc2;--acs:rgba(10,92,194,.1);--bd:#dbe2eb;--ok:#0a7a45;--oks:rgba(10,122,69,.1);--er:#c8343a;--ers:rgba(200,52,58,.08);--wn:#a35a00;--wns:rgba(214,130,0,.1);--sh:0 1px 2px rgba(15,27,42,.05),0 4px 14px rgba(15,27,42,.05);--bar1:#0b2a4a;--bar2:#0a5cc2;--r:14px;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b131d;--card:#131e2b;--card2:#182636;--tx:#e7eef7;--mut:#8e9db0;--ac:#4d9fff;--acs:rgba(77,159,255,.14);--bd:#243345;--ok:#3fcf8e;--oks:rgba(63,207,142,.12);--er:#ff6b6b;--ers:rgba(255,107,107,.1);--wn:#ffb547;--wns:rgba(255,181,71,.1);--sh:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25);--bar1:#0f2c4d;--bar2:#1d5fae;color-scheme:dark}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:0 12px 24px;font-variant-numeric:tabular-nums}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+section:not([hidden]){animation:fade .22s ease-out}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:12px;box-shadow:var(--sh)}
+.card h2{display:flex;align-items:center;gap:8px;font-size:12.5px;margin:0 0 6px;color:var(--mut);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+.card h2::before{content:"";width:4px;height:14px;border-radius:2px;background:var(--ac);flex:none}
+label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px;font-weight:500}
+input,select{width:100%;height:48px;padding:10px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--card2);color:var(--tx);font:inherit;font-size:16px;transition:border-color .15s,box-shadow .15s}
+input::placeholder{color:var(--mut);opacity:.7}
+input:focus,select:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 3px var(--acs);background:var(--card)}
+select{-webkit-appearance:none;appearance:none;padding-right:28px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%238e9db0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+input::-webkit-calendar-picker-indicator{opacity:.75;cursor:pointer}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) input::-webkit-calendar-picker-indicator{filter:invert(.8)}}
+.row{display:flex;gap:10px;align-items:flex-end}.row>div{flex:1;min-width:0}
+.c3{display:flex;gap:6px}.c3 input{flex:1.2;min-width:0}.c3 select{flex:1;min-width:0;padding-left:10px}
+button{width:100%;min-height:48px;padding:12px;border:0;border-radius:12px;background:linear-gradient(180deg,color-mix(in srgb,var(--ac) 88%,#fff),var(--ac));color:#fff;font:inherit;font-size:16px;font-weight:650;margin-top:12px;cursor:pointer;box-shadow:0 2px 8px color-mix(in srgb,var(--ac) 30%,transparent);transition:transform .08s,filter .15s}
+button:active{transform:scale(.98);filter:brightness(.95)}
+button.sec{background:var(--acs);color:var(--ac);border:1px solid transparent;box-shadow:none;font-weight:600}
+button.sm{min-height:40px;padding:8px 12px;font-size:14px;margin-top:10px}
+table{width:100%;border-collapse:collapse;margin-top:6px;font-size:14.5px}
+td{padding:9px 0;border-bottom:1px solid var(--bd);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td:first-child{color:var(--mut)}
+td:last-child{text-align:right;padding-left:10px;font-weight:600;color:var(--tx)}
+td.h{font-weight:700;color:var(--ac);padding-top:14px;text-align:left;border-bottom:2px solid var(--ac);font-size:12.5px;text-transform:uppercase;letter-spacing:.05em}
+#skytb td{color:var(--tx)}#skytb td:last-child{font-weight:500}
+.big{font-size:34px;font-weight:800;color:var(--ok);text-align:center;margin:8px 0 2px;letter-spacing:-.01em}
+.lbl{font-size:11.5px;color:var(--mut);text-align:center;text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-top:6px}
+.big2{font-size:30px;font-weight:800;color:var(--ok);text-align:center;margin:2px 0 12px;line-height:1.15;letter-spacing:-.01em}
+.note{font-size:13px;color:var(--mut);margin-top:8px;line-height:1.45}
+.note:empty{display:none}
+section>.note{padding:0 4px;font-size:12.5px;opacity:.9}
+.err{color:var(--er)}
+.note.err{background:var(--ers);border:1px solid color-mix(in srgb,var(--er) 25%,transparent);border-radius:10px;padding:9px 12px;color:var(--er)}
+#warn,#twarn,#awarn,#gw,#kw{background:var(--wns);color:var(--wn);border-radius:10px;padding:9px 12px}
 [hidden]{display:none!important}
-.tab{flex:1 1 0;font-size:13px;padding:8px 4px}
-.tabs{gap:4px}
-.tabs{flex-wrap:wrap}.tab{flex:1 1 45%}
-@media (min-width:600px){
- body{max-width:1280px;margin:0 auto}
- #t1wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
- #t1res{order:1;position:sticky;top:8px;max-height:calc(100vh - 16px);overflow:auto}
- #t1in{order:2}
- #t1res .wideonly{display:block}
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark}}
-input::-webkit-calendar-picker-indicator{opacity:1;cursor:pointer}
+/* app bar & menu */
+.menu{position:sticky;top:0;z-index:40;margin:0 -12px 12px;padding:10px 12px 8px;background:var(--bg)}
+#menuBtn{margin:0;display:flex;align-items:center;gap:12px;text-align:left;padding:10px 14px 10px 10px;border-radius:16px;background:linear-gradient(135deg,var(--bar1),var(--bar2));box-shadow:0 6px 18px rgba(10,50,100,.25);min-height:58px}
+.mb-ic{width:38px;height:38px;flex:none;border-radius:11px;background:rgba(255,255,255,.14);display:grid;place-items:center;font-size:20px}
+.mb-tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2}
+.mb-tx small{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;opacity:.7}
+#menuLbl{font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mb-ch{flex:none;opacity:.85;transition:transform .2s;font-size:14px}
+.menu.open .mb-ch{transform:rotate(180deg)}
+.tabs{display:none;flex-direction:column;gap:2px;position:absolute;left:12px;right:12px;top:calc(100% - 2px);margin:0;padding:6px;background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:0 16px 40px rgba(0,0,0,.28);max-height:75vh;overflow:auto;animation:fade .15s ease-out}
+.tabs.open{display:flex}
+.tab{flex:none;margin:0;text-align:left;font-size:15px;font-weight:550;padding:13px 14px;border-radius:11px;background:transparent;color:var(--tx);border:0;box-shadow:none;min-height:0}
+.tab:active{background:var(--card2)}
+.tab.on{background:var(--acs);color:var(--ac);font-weight:700}
+/* segmented controls */
 .seg{display:none}
+.seg2{display:flex;gap:4px;padding:4px;margin-bottom:12px;background:var(--card);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh)}
+.seg2 button,.seg button{margin:0;min-height:42px;padding:9px 6px;font-size:14.5px;background:transparent;color:var(--mut);border:0;border-radius:10px;box-shadow:none;font-weight:600}
+.seg2 button.on,.seg button.on{background:var(--ac);color:#fff;box-shadow:0 2px 8px color-mix(in srgb,var(--ac) 35%,transparent)}
+/* compass tab layout */
+@media (min-width:600px){
+ body{max-width:1180px;margin:0 auto;padding:0 20px 32px}
+ .menu{margin:0 -20px 14px;padding:12px 20px 10px}
+ .tabs{left:20px;right:auto;min-width:380px}
+ #t1wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+ #t1res{order:1;position:sticky;top:86px;max-height:calc(100vh - 96px);overflow:auto}
+ #t1in{order:2}
+ .duo{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+}
 @media (max-width:599px){
- .seg{display:flex;gap:6px;margin-bottom:10px}
- .seg button{margin:0;padding:9px 6px;font-size:14px;background:var(--card);color:var(--tx);border:1px solid var(--bd)}
- .seg button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
- #t1wrap{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;align-items:flex-start}
+ .seg{display:flex;gap:4px;padding:4px;margin-bottom:12px;background:var(--card);border:1px solid var(--bd);border-radius:14px}
+ #t1wrap{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;align-items:flex-start;scrollbar-width:none}
+ #t1wrap::-webkit-scrollbar{display:none}
  #t1res,#t1in{flex:0 0 100%;min-width:0;scroll-snap-align:start}
  #t1res{order:1}#t1in{order:2}
+
 }
-@media (min-width:600px){.duo{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}}
-.row{align-items:flex-end}
-input,select{height:48px}
-.menu{position:sticky;top:0;z-index:40;margin:0 0 12px;padding:4px 0;background:var(--bg)}
-#menuBtn{margin:0;display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;font-size:15px;padding:12px 14px}
-.tabs{display:none;flex-direction:column;flex-wrap:nowrap;gap:4px;position:absolute;left:0;right:0;top:calc(100% + 2px);margin:0;padding:6px;background:var(--card);border:1px solid var(--bd);border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.4);max-height:75vh;overflow:auto}
-.tabs.open{display:flex}
-.tab{flex:none;text-align:left;font-size:15px;padding:12px}
+/* ETA */
+.eta{display:block}
+@media (min-width:900px){.eta .duo{display:block}.eta{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:14px;align-items:start}.eta-res{position:sticky;top:86px}}
+.hero{text-align:center;padding:10px 0 4px}
+.hero-v{font-size:52px;font-weight:800;line-height:1.05;letter-spacing:-.02em;color:var(--ok);margin:4px 0 2px}
+.hero-s{font-size:15px;color:var(--tx);font-weight:600}
+.hero-z{display:inline-block;margin-top:6px;font-size:12px;font-weight:600;color:var(--ac);background:var(--acs);border-radius:99px;padding:3px 10px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 4px}
+.tile{background:var(--card2);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;min-width:0}
+.tile span{display:block;font-size:11.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.tile b{display:block;font-size:17px;font-weight:750;margin-top:2px;line-height:1.25}
+.tl{margin:16px 2px 4px}
+.tl-bar{position:relative;height:6px;border-radius:3px;background:var(--bd);margin:0 8px}
+.tl-fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:linear-gradient(90deg,var(--ac),var(--ok))}
+.tl-bar::before,.tl-bar::after{content:"";position:absolute;top:50%;width:14px;height:14px;margin-top:-7px;border-radius:50%;background:var(--card);border:3px solid var(--ac)}
+.tl-bar::before{left:-8px}.tl-bar::after{right:-8px;border-color:var(--ok)}
+.tl-ship{position:absolute;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 5px var(--oks);z-index:1}
+.tl-pts{display:flex;justify-content:space-between;gap:10px;margin-top:12px;font-size:13px}
+.tl-pts div{min-width:0}.tl-pts div:last-child{text-align:right}
+.tl-pts b{display:block;font-size:17px}.tl-pts span{color:var(--mut)}
+.ph{text-align:center;padding:26px 14px;color:var(--mut)}
+.ph .ic{font-size:36px;opacity:.6}
+.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;background:var(--tx);color:var(--bg);font-size:13.5px;padding:10px 16px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.3);max-width:calc(100% - 32px);animation:fade .25s ease-out;transition:opacity .4s}
 </style>
 </head>
 <body>
-<div class="menu" id="menu"><button id="menuBtn" aria-haspopup="true"><span id="menuLbl">🧭 Расчёт поправки компаса</span><span>▾</span></button><div class="tabs" id="tabsMenu"><button class="tab on" data-t="t1">🧭 Расчёт поправки компаса</button><button class="tab" data-t="t2">🚢 Расчёт ETA</button><button class="tab" data-t="t3">🌊 Приливы</button><button class="tab" data-t="t4">📖 Таблицы ATT</button><button class="tab" data-t="t6">🌟 Азимуты светил</button><button class="tab" data-t="t5">⚖️ Расчёт метацентрической высоты по периоду качки</button></div></div>
-<section id="t1"><div class="seg" id="t1seg"><button data-p="res">📊 Результат</button><button data-p="in" class="on">✏️ Ввод данных</button></div><div id="t1wrap"><div id="t1in">
+<div class="menu" id="menu"><button id="menuBtn" aria-haspopup="true"><span class="mb-ic">⚓</span><span class="mb-tx"><small>Навигация</small><span id="menuLbl">🚢 Расчёт ETA</span></span><span class="mb-ch">▾</span></button><div class="tabs" id="tabsMenu"><button class="tab on" data-t="t2">🚢 Расчёт ETA</button><button class="tab" data-t="t1">🧭 Расчёт поправки компаса</button><button class="tab" data-t="t3">🌊 Приливы</button><button class="tab" data-t="t4">📖 Таблицы ATT</button><button class="tab" data-t="t6">🌟 Азимуты светил</button><button class="tab" data-t="t5">⚖️ Расчёт метацентрической высоты по периоду качки</button></div></div>
+<section id="t1" hidden><div class="seg" id="t1seg"><button data-p="res">📊 Результат</button><button data-p="in" class="on">✏️ Ввод данных</button></div><div id="t1wrap"><div id="t1in">
 
 <div class="card">
 <h2>Координаты</h2>
@@ -123,46 +170,52 @@ input,select{height:48px}
 </div>
 </section>
 
-<section id="t2" hidden>
+<section id="t2">
+<div class="seg2" id="tmode"><button data-m="eta" class="on">🕒 Найти ETA</button><button data-m="spd">⚡ Найти скорость</button></div>
+<div class="eta"><div>
 <div class="duo">
 <div class="card">
 <h2>Отход</h2>
-<label>Дата отхода (местная)</label>
-<input id="tdate" type="date">
 <div class="row">
-<div><label>Время отхода (местное)</label><input id="ttime" type="time"></div>
-<div><label>Часовой пояс, E/W</label><div class="c3"><select id="tzn"></select><select id="tzs"><option>E</option><option>W</option></select></div></div>
+<div><label>Дата (местная)</label><input id="tdate" type="date"></div>
+<div><label>Время</label><input id="ttime" type="time"></div>
 </div>
+<label>Часовой пояс, E/W</label>
+<div class="c3"><select id="tzn"></select><select id="tzs"><option>E</option><option>W</option></select></div>
+<button class="sec sm" id="tnow">🕒 Отход сейчас</button>
 </div>
 <div class="card">
 <h2>Приход</h2>
-<label>Дата прихода (местная)</label>
-<input id="sdate" type="date">
-<div class="row">
-<div><label>Время прихода (местное)</label><input id="stime" type="time"></div>
-<div><label>Часовой пояс порта прихода, E/W</label><div class="c3"><select id="azn"></select><select id="azs"><option>E</option><option>W</option></select></div></div>
+<div class="row" id="tarr" hidden>
+<div><label>Дата (местная)</label><input id="sdate" type="date"></div>
+<div><label>Время</label><input id="stime" type="time"></div>
 </div>
+<label>Часовой пояс порта прихода, E/W</label>
+<div class="c3"><select id="azn"></select><select id="azs"><option>E</option><option>W</option></select></div>
+<button class="sec sm" id="tsame">⇆ Пояс как при отходе</button>
 </div>
 </div>
 <div class="card">
 <h2>Переход</h2>
 <div class="row">
 <div><label>Расстояние, мили</label><input id="dist" inputmode="decimal" placeholder="500"></div>
-<div><label>Скорость, узлы</label><input id="spd" inputmode="decimal" placeholder="12"></div>
+<div id="tspdw"><label>Скорость, узлы</label><input id="spd" inputmode="decimal" placeholder="12"></div>
 </div>
-<div class="note">Расчёт идёт автоматически. Заданы дата и время прихода: считается скорость. Дата прихода не задана, но есть скорость: считается ETA.</div>
+<div class="note" id="tmnote"></div>
 <div class="note err" id="terr"></div>
 </div>
+</div><div class="eta-res">
+<div class="card ph" id="tph"><div class="ic">🚢</div><div>Введите расстояние и скорость — время прибытия посчитается сразу.</div></div>
 <div class="card" id="tout" hidden>
 <h2 id="thead">Результат</h2>
-<div id="sblk"><div class="lbl">Требуемая скорость</div><div class="big2" id="tspd"></div></div>
-<div class="lbl">Время в пути</div><div class="big2" id="tdur"></div>
-<div class="lbl">Дата прибытия</div><div class="big2" id="tadate"></div>
-<div class="lbl">Время прибытия (местное)</div><div class="big2" id="tatime"></div>
+<div class="hero"><div class="lbl" id="thl"></div><div class="hero-v" id="thv"></div><div class="hero-s" id="ths"></div><div class="hero-z" id="thz"></div></div>
+<div class="tiles" id="ttiles"></div>
+<div class="tl" id="ttl"></div>
 <table id="ttb"></table>
 <div class="note" id="twarn"></div>
 </div>
-<div class="note">Все расчёты идут через UTC. Пояс E: UTC = местное − №; пояс W: UTC = местное + №. Летнее время не учитывается — введите фактический пояс судового времени.</div>
+</div></div>
+<div class="note">Все расчёты идут через UTC. Пояс E: UTC = местное − №; пояс W: UTC = местное + №. Летнее время не учитывается — введите фактический пояс судового времени. Введённые данные запоминаются на этом устройстве.</div>
 </section>
 
 <section id="t3" hidden>
@@ -541,53 +594,73 @@ function calc(){
 $("calc").onclick=calc;
 document.querySelectorAll(".tab").forEach(function(b){b.onclick=function(){
   document.querySelectorAll(".tab").forEach(function(x){x.classList.toggle("on",x===b)});
-  ["t1","t2","t3","t4","t5","t6"].forEach(function(id){$(id).hidden=b.dataset.t!==id});if(b.dataset.t==="t6")skyCalc();
+  ["t1","t2","t3","t4","t5","t6"].forEach(function(id){$(id).hidden=b.dataset.t!==id});if(b.dataset.t==="t6")skyCalc();window.scrollTo(0,0);if(b.dataset.t==="t1"&&window.t1Init)window.t1Init();
 }});
-["tzn","azn"].forEach(function(id){var h="";for(var i=0;i<=12;i++)h+="<option value=\""+i+"\">"+i+"</option>";$(id).innerHTML=h});
-(function(){var d=new Date(),o=-d.getTimezoneOffset()/60;
-  $("tdate").value=d.getFullYear()+"-"+pad(d.getMonth()+1,2)+"-"+pad(d.getDate(),2);
-  $("ttime").value=pad(d.getHours(),2)+":"+pad(d.getMinutes(),2);
-  $("tzn").value=$("azn").value=String(Math.min(12,Math.round(Math.abs(o))));$("tzs").value=$("azs").value=o>=0?"E":"W";})();
+var TMODE="eta",WD=["вс","пн","вт","ср","чт","пт","сб"];
+function zof(nid,sid){return ($(sid).value==="E"?1:-1)*n($(nid).value)}
+function zlab(t){return "UTC"+(t>=0?"+":"−")+Math.abs(t)}
+function durS(min){min=Math.round(min);var d=Math.floor(min/1440),h=Math.floor(min%1440/60),m=min%60,p=[];if(d>0)p.push(d+" сут");if(h>0||d>0)p.push(h+" ч");p.push(m+" мин");return p.join(" ")}
+function dLoc(ms,t){var d=new Date(ms+t*3600000);return {d:pad(d.getUTCDate(),2)+"."+pad(d.getUTCMonth()+1,2)+"."+d.getUTCFullYear(),dm:pad(d.getUTCDate(),2)+"."+pad(d.getUTCMonth()+1,2),t:pad(d.getUTCHours(),2)+":"+pad(d.getUTCMinutes(),2),w:WD[d.getUTCDay()]}}
 function fmt(ms){var d=new Date(ms);return pad(d.getUTCDate(),2)+"."+pad(d.getUTCMonth()+1,2)+"."+d.getUTCFullYear()+" "+pad(d.getUTCHours(),2)+":"+pad(d.getUTCMinutes(),2)}
-function zl(z,sg){return z+" "+sg}
-function tcalc(){
-  var e=$("terr");e.textContent="";$("tout").hidden=true;
-  var dist=n($("dist").value),spd=n($("spd").value),z1=n($("tzn").value),z2=n($("azn").value);
-  var hasDep=$("tdate").value&&$("ttime").value,hasArr=$("sdate").value&&$("stime").value;
-  if(!hasDep||isNaN(dist)||isNaN(z1)||isNaN(z2))return;
-  if(dist<=0){e.textContent="Расстояние должно быть больше нуля.";return}
-  var t1=($("tzs").value==="E"?1:-1)*z1,t2=($("azs").value==="E"?1:-1)*z2;
-  var ds=$("tdate").value.split("-"),ts=$("ttime").value.split(":");
-  var depU=Date.UTC(+ds[0],+ds[1]-1,+ds[2],+ts[0],+ts[1],0)-t1*3600000;
-  var hrs,arrU,mode;
-  if(hasArr){
-    var c=$("sdate").value.split("-"),f=$("stime").value.split(":");
-    arrU=Date.UTC(+c[0],+c[1]-1,+c[2],+f[0],+f[1],0)-t2*3600000;
-    hrs=(arrU-depU)/3600000;
-    if(hrs<=0){e.textContent="Прибытие должно быть позже отхода (с учётом часовых поясов).";return}
-    mode="spd";
-  }else if(!isNaN(spd)){
-    if(spd<=0){e.textContent="Скорость должна быть больше нуля.";return}
-    hrs=dist/spd;arrU=depU+hrs*3600000;mode="eta";
-  }else return;
-  var tm=Math.round(hrs*60),dd=Math.floor(tm/1440),hh=Math.floor(tm%1440/60),mm=tm%60,p=[];
-  if(dd>0)p.push(dd+" дн.");if(hh>0)p.push(hh+" ч.");p.push(mm+" мин.");
-  var v=dist/hrs;
-  $("thead").textContent=mode==="spd"?"Результат: требуемая скорость":"Результат: ETA";
-  $("sblk").hidden=mode!=="spd";
-  $("tspd").textContent=v.toFixed(1)+" уз";
-  $("tdur").textContent=p.join(" ");
-  var al=new Date(arrU+t2*3600000);
-  $("tadate").textContent=pad(al.getUTCDate(),2)+"."+pad(al.getUTCMonth()+1,2)+"."+al.getUTCFullYear();
-  $("tatime").textContent=pad(al.getUTCHours(),2)+":"+pad(al.getUTCMinutes(),2);
-  $("twarn").textContent=(mode==="spd"&&v>40)?"Скорость выше 40 узлов — проверьте даты, время и пояса.":"";
-  var R=[["Отход, местное ("+zl(z1,$("tzs").value)+")",fmt(depU+t1*3600000)],["Отход, UTC",fmt(depU)],["Прибытие, UTC",fmt(arrU)],["Прибытие, местное ("+zl(z2,$("azs").value)+")",fmt(arrU+t2*3600000)],["Всего в пути",hrs.toFixed(2)+" ч ("+tm+" мин)"]];
-  if(mode==="spd")R.push(["Скорость",v.toFixed(2)+" уз"]);
-  $("ttb").innerHTML=R.map(function(r){return "<tr><td>"+r[0]+"</td><td>"+r[1]+"</td></tr>"}).join("");
-  $("tout").hidden=false;
+function locU(dId,tId,t){var ds=$(dId).value.split("-"),ts=$(tId).value.split(":");return Date.UTC(+ds[0],+ds[1]-1,+ds[2],+ts[0],+ts[1],0)-t*3600000}
+function nf(x,k){return x.toFixed(k).replace(".",",")}
+function tSave(){try{localStorage.setItem("eta_v1",JSON.stringify({m:TMODE,dist:$("dist").value,spd:$("spd").value,tzn:$("tzn").value,tzs:$("tzs").value,azn:$("azn").value,azs:$("azs").value}))}catch(x){}}
+function tMode(m){
+  TMODE=m;document.querySelectorAll("#tmode button").forEach(function(b){b.classList.toggle("on",b.dataset.m===m)});
+  $("tarr").hidden=m!=="spd";$("tspdw").hidden=m==="spd";
+  $("tmnote").textContent=m==="spd"?"Задайте расстояние, дату и время прихода — посчитается требуемая скорость.":"Задайте расстояние и скорость — посчитаются время в пути и ETA.";
+  if(m==="spd"&&(!$("sdate").value||!$("stime").value)&&$("tdate").value&&$("ttime").value){
+    var t1=zof("tzn","tzs"),t2=zof("azn","azs"),a=locU("tdate","ttime",t1)+24*3600000+t2*3600000,d=new Date(a);
+    $("sdate").value=d.getUTCFullYear()+"-"+pad(d.getUTCMonth()+1,2)+"-"+pad(d.getUTCDate(),2);$("stime").value=pad(d.getUTCHours(),2)+":"+pad(d.getUTCMinutes(),2);
+  }
+  tcalc();
 }
-["tdate","ttime","tzn","tzs","azn","azs","sdate","stime","dist","spd"].forEach(function(id){$(id).addEventListener("input",tcalc);$(id).addEventListener("change",tcalc)});
-if("serviceWorker" in navigator&&location.hostname!=="localhost"){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").then(function(){return navigator.serviceWorker.ready}).then(function(){var d=document.createElement("div");d.className="note";d.textContent="Офлайн-режим готов: приложение откроется без интернета. Поиск порта и прогноз приливов требуют сети.";document.body.appendChild(d)}).catch(function(){})})}
+function tcalc(){
+  var e=$("terr");e.textContent="";$("tout").hidden=true;$("tph").hidden=false;
+  var dist=n($("dist").value),spd=n($("spd").value),z1=n($("tzn").value),z2=n($("azn").value);
+  if(!$("tdate").value||!$("ttime").value||isNaN(dist)||isNaN(z1)||isNaN(z2))return;
+  if(dist<=0){e.textContent="Расстояние должно быть больше нуля.";return}
+  var t1=zof("tzn","tzs"),t2=zof("azn","azs"),depU=locU("tdate","ttime",t1),hrs,arrU;
+  if(TMODE==="spd"){
+    if(!$("sdate").value||!$("stime").value)return;
+    arrU=locU("sdate","stime",t2);hrs=(arrU-depU)/3600000;
+    if(hrs<=0){e.textContent="Прибытие должно быть позже отхода (с учётом часовых поясов).";return}
+  }else{
+    if(isNaN(spd))return;
+    if(spd<=0){e.textContent="Скорость должна быть больше нуля.";return}
+    hrs=dist/spd;arrU=depU+hrs*3600000;
+  }
+  var v=dist/hrs,tm=Math.round(hrs*60),A=dLoc(arrU,t2),Dp=dLoc(depU,t1),now=Date.now();
+  $("thead").textContent=TMODE==="spd"?"Результат: требуемая скорость":"Результат: ETA";
+  if(TMODE==="spd"){$("thl").textContent="Требуемая скорость";$("thv").textContent=nf(v,1)+" уз";$("ths").textContent="прибытие "+A.d+" ("+A.w+") в "+A.t;$("thz").textContent="местное время порта прихода, "+zlab(t2)}
+  else{$("thl").textContent="Прибытие (ETA)";$("thv").textContent=A.t;$("ths").textContent=A.d+", "+A.w;$("thz").textContent="местное время порта прихода, "+zlab(t2)}
+  var left=arrU-now,lt=left>0?"через "+durS(left/60000):"было "+durS(-left/60000)+" назад";
+  var T=[["В пути",durS(tm)],TMODE==="spd"?["Прибытие",A.dm+" "+A.t]:["Скорость",nf(v,1)+" уз"],["Расстояние",nf(dist,dist%1?1:0)+" миль"],["До прибытия",lt]];
+  $("ttiles").innerHTML=T.map(function(x){return "<div class='tile'><span>"+x[0]+"</span><b title='"+x[1]+"'>"+x[1]+"</b></div>"}).join("");
+  var f=Math.max(0,Math.min(1,(now-depU)/(arrU-depU))),on=now>depU&&now<arrU;
+  $("ttl").innerHTML="<div class='tl-bar'><div class='tl-fill' style='width:"+(f*100).toFixed(1)+"%'></div>"+(on?"<div class='tl-ship' style='left:"+(f*100).toFixed(1)+"%'></div>":"")+"</div><div class='tl-pts'><div><span>Отход · "+zlab(t1)+"</span><b>"+Dp.t+"</b><span>"+Dp.dm+", "+Dp.w+"</span></div><div><span>Приход · "+zlab(t2)+"</span><b>"+A.t+"</b><span>"+A.dm+", "+A.w+"</span></div></div>"+(on?"<div class='note' style='text-align:center'>Сейчас в пути: пройдено ≈ "+nf(dist*f,0)+" из "+nf(dist,0)+" миль ("+Math.round(f*100)+" %)</div>":"");
+  var R=[["Отход, местное ("+zlab(t1)+")",fmt(depU+t1*3600000)],["Отход, UTC",fmt(depU)],["Прибытие, UTC",fmt(arrU)],["Прибытие, местное ("+zlab(t2)+")",fmt(arrU+t2*3600000)],["Всего в пути",nf(hrs,2)+" ч ("+tm+" мин)"],["Средняя скорость",nf(v,2)+" уз"]];
+  if(t1!==t2)R.push(["Перевод часов",(t2>t1?"вперёд на ":"назад на ")+Math.abs(t2-t1)+" ч"]);
+  $("ttb").innerHTML=R.map(function(r){return "<tr><td>"+r[0]+"</td><td>"+r[1]+"</td></tr>"}).join("");
+  $("twarn").textContent=v>40?"Скорость выше 40 узлов — проверьте даты, время и пояса.":"";
+  $("tout").hidden=false;$("tph").hidden=true;
+}
+function setDepNow(){var d=new Date(Date.now()+zof("tzn","tzs")*3600000);$("tdate").value=d.getUTCFullYear()+"-"+pad(d.getUTCMonth()+1,2)+"-"+pad(d.getUTCDate(),2);$("ttime").value=pad(d.getUTCHours(),2)+":"+pad(d.getUTCMinutes(),2)}
+["tzn","azn"].forEach(function(id){var h="";for(var i=0;i<=12;i++)h+="<option value=\""+i+"\">"+i+"</option>";$(id).innerHTML=h});
+(function(){var o=-new Date().getTimezoneOffset()/60,s=null;
+  $("tzn").value=$("azn").value=String(Math.min(12,Math.round(Math.abs(o))));$("tzs").value=$("azs").value=o>=0?"E":"W";
+  try{s=JSON.parse(localStorage.getItem("eta_v1")||"null")}catch(x){}
+  if(s){["dist","spd","tzn","tzs","azn","azs"].forEach(function(k){if(s[k]!=null&&s[k]!=="")$(k).value=s[k]})}
+  setDepNow();
+  document.querySelectorAll("#tmode button").forEach(function(b){b.onclick=function(){tMode(b.dataset.m);tSave()}});
+  $("tnow").onclick=function(){setDepNow();tcalc()};
+  $("tsame").onclick=function(){$("azn").value=$("tzn").value;$("azs").value=$("tzs").value;tcalc();tSave()};
+  ["tdate","ttime","tzn","tzs","azn","azs","sdate","stime","dist","spd"].forEach(function(id){$(id).addEventListener("input",tcalc);$(id).addEventListener("change",function(){tcalc();tSave()})});
+  ["dist","spd"].forEach(function(id){$(id).addEventListener("input",tSave)});
+  tMode(s&&s.m==="spd"?"spd":"eta");
+  setInterval(function(){if(!$("t2").hidden&&!$("tout").hidden)tcalc()},60000);
+})();
+if("serviceWorker" in navigator&&location.hostname!=="localhost"){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").then(function(){return navigator.serviceWorker.ready}).then(function(){try{if(localStorage.getItem("offline_ok"))return;localStorage.setItem("offline_ok","1")}catch(x){}var d=document.createElement("div");d.className="toast";d.textContent="✓ Офлайн-режим готов: приложение откроется без интернета";document.body.appendChild(d);setTimeout(function(){d.style.opacity="0";setTimeout(function(){d.remove()},500)},4000)}).catch(function(){})})}
 
 var TD=null,PR=[];
 function zoneT(){return ($("pzs").value==="E"?1:-1)*n($("pzn").value)}
@@ -835,7 +908,7 @@ function kcalc(){
   window.showP=function(p){w.scrollTo({left:p==="res"?0:w.scrollWidth,behavior:"smooth"})};
   btns.forEach(function(b){b.onclick=function(){window.showP(b.getAttribute("data-p"))}});
   w.addEventListener("scroll",mark);
-  if(window.matchMedia("(max-width:599px)").matches)setTimeout(function(){w.scrollLeft=w.scrollWidth;mark()},50);
+  var done=false;window.t1Init=function(){if(done||!window.matchMedia("(max-width:599px)").matches)return;done=true;w.scrollLeft=w.scrollWidth;mark()};
 })();
 
 function nowFields(){
@@ -881,9 +954,9 @@ $("gccb").onclick=function(){
 
 (function(){
   var m=$("tabsMenu"),btn=$("menuBtn");
-  btn.onclick=function(e){e.stopPropagation();m.classList.toggle("open")};
-  document.querySelectorAll(".tab").forEach(function(b){b.addEventListener("click",function(){$("menuLbl").textContent=b.textContent;m.classList.remove("open")})});
-  document.addEventListener("click",function(e){if(!$("menu").contains(e.target))m.classList.remove("open")});
+  btn.onclick=function(e){e.stopPropagation();$("menu").classList.toggle("open",m.classList.toggle("open"))};
+  document.querySelectorAll(".tab").forEach(function(b){b.addEventListener("click",function(){$("menuLbl").textContent=b.textContent;m.classList.remove("open");$("menu").classList.remove("open")})});
+  document.addEventListener("click",function(e){if(!$("menu").contains(e.target)){m.classList.remove("open");$("menu").classList.remove("open")}});
 })();
 
 var DBSEL=null,DBL=null,DBLOAD=0;
