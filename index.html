@@ -433,9 +433,9 @@ section>.note{padding:0 4px;font-size:12.5px;opacity:.9}
 <div><label>Сортировка</label><select id="skysort"><option value="h">по высоте</option><option value="az">по азимуту</option><option value="n">по названию</option></select></div>
 </div>
 </div>
-<div class="card"><h2>Небесная сфера (вид сверху)</h2><div id="skychart"></div><div class="note">Центр: зенит, внешний круг: горизонт, N вверху. Жёлтая точка: Солнце. Кольца: высота 30° и 60°.</div></div>
-<div class="card"><h2>Светила над горизонтом</h2><table id="skytb"></table><div class="note" id="skyn"></div></div>
-<div class="note">Координаты, дата, время и пояс берутся с вкладки «Расчёт поправки компаса». Кнопка «Обновить» ставит текущее время (в выбранном поясе) и берёт координаты с GPS. В списке Солнце и 57 навигационных звёзд МАЕ с Полярной. Луна и планеты не включены. ИП: истинный пеленг (азимут от севера по часовой стрелке).</div>
+<div class="card"><h2>Небесная сфера (вид сверху)</h2><div id="skychart"></div><div class="note">Центр: зенит, внешний круг: горизонт, N вверху. Жёлтая точка: Солнце, светло-серая: Луна. Кольца: высота 30° и 60°.</div></div>
+<div class="card"><h2>Светила</h2><table id="skytb"></table><div class="note" id="skyn"></div></div>
+<div class="note">Координаты, дата, время и пояс берутся с вкладки «Расчёт поправки компаса». Кнопка «Обновить» ставит текущее время (в выбранном поясе) и берёт координаты с GPS. В списке Солнце, Луна (всегда первыми) и 57 навигационных звёзд МАЕ с Полярной. Луна считается по упрощённой теории ELP (основные члены, точность ≈ 1′), её высота топоцентрическая — с поправкой за параллакс. Планеты не включены. ИП: истинный пеленг (азимут от севера по часовой стрелке).</div>
 </section>
 
 <script>
@@ -495,6 +495,27 @@ function starAt(ms,s){
   dD+=-k*(Math.cos(sl)*Math.cos(ep)*(Math.tan(ep)*Math.cos(dl)-Math.sin(al)*Math.sin(dl))+Math.cos(al)*Math.sin(dl)*Math.sin(sl));
   return {sha:n360(360-(ra+dA)),dec:de+dD,eq:dpsi*Math.cos(ep)};
 }
+var MLR=[[0,0,1,0,6288774,-20905355],[2,0,-1,0,1274027,-3699111],[2,0,0,0,658314,-2955968],[0,0,2,0,213618,-569925],[0,1,0,0,-185116,48888],[0,0,0,2,-114332,-3149],[2,0,-2,0,58793,246158],[2,-1,-1,0,57066,-152138],[2,0,1,0,53322,-170733],[2,-1,0,0,45758,-204586],[0,1,-1,0,-40923,-129620],[1,0,0,0,-34720,108743],[0,1,1,0,-30383,104755],[2,0,0,-2,15327,10321],[0,0,1,2,-12528,0],[0,0,1,-2,10980,79661],[4,0,-1,0,10675,-34782],[0,0,3,0,10034,-23210],[4,0,-2,0,8548,-21636],[2,1,-1,0,-7888,24208],[2,1,0,0,-6766,30824],[1,0,-1,0,-5163,-8379],[1,1,0,0,4987,-16675],[2,-1,1,0,4036,-12831],[2,0,2,0,3994,-10445],[4,0,0,0,3861,-11650],[2,0,-3,0,3665,14403],[0,1,-2,0,-2689,-7003],[2,0,-1,2,-2602,0],[2,-1,-2,0,2390,10056],[1,0,1,0,-2348,6322],[2,-2,0,0,2236,-9884],[0,1,2,0,-2120,5751],[0,2,0,0,-2069,0],[2,-2,-1,0,2048,-4950],[2,0,1,-2,-1773,4130],[2,0,0,2,-1595,0],[4,-1,-1,0,1215,-3958],[0,0,2,2,-1110,0],[3,0,-1,0,-892,3258],[2,1,1,0,-810,2616],[4,-1,-2,0,759,-1897],[0,2,-1,0,-713,-2117],[2,2,-1,0,-700,2354],[2,1,-2,0,691,0],[2,-1,0,-2,596,0],[4,0,1,0,549,-1423],[0,0,4,0,537,-1117],[4,-1,0,0,520,-1571],[1,0,-2,0,-487,-1739]];
+var MB=[[0,0,0,1,5128122],[0,0,1,1,280602],[0,0,1,-1,277693],[2,0,0,-1,173237],[2,0,-1,1,55413],[2,0,-1,-1,46271],[2,0,0,1,32573],[0,0,2,1,17198],[2,0,1,-1,9266],[0,0,2,-1,8822],[2,-1,0,-1,8216],[2,0,-2,-1,4324],[2,0,1,1,4200],[2,1,0,-1,-3359],[2,-1,-1,1,2463],[2,-1,0,1,2211],[2,-1,-1,-1,2065],[0,1,-1,-1,-1870],[4,0,-1,-1,1828],[0,1,0,1,-1794],[0,0,0,3,-1749],[0,1,-1,1,-1565],[1,0,0,1,-1491],[0,1,1,1,-1475],[0,1,1,-1,-1410],[0,1,0,-1,-1344],[1,0,0,-1,-1335],[0,0,3,1,1107],[4,0,0,-1,1021],[4,0,-1,1,833]];
+function moonAt(ms){
+  var T=(jdOf(ms+69000)-2451545.0)/36525,E=1-0.002516*T-0.0000074*T*T;
+  var Lp=n360(218.3164477+481267.88123421*T),Dm=n360(297.8501921+445267.1114034*T),M=n360(357.5291092+35999.0502909*T),Mp=n360(134.9633964+477198.8675055*T),F=n360(93.2720950+483202.0175233*T);
+  var A1=119.75+131.849*T,A2=53.09+479264.290*T,A3=313.45+481266.484*T,sl=0,sr=0,sb=0;
+  function ef(m){m=Math.abs(m);return m===1?E:m===2?E*E:1}
+  MLR.forEach(function(r){var a=(r[0]*Dm+r[1]*M+r[2]*Mp+r[3]*F)*D,e=ef(r[1]);sl+=r[4]*e*Math.sin(a);sr+=r[5]*e*Math.cos(a)});
+  MB.forEach(function(r){sb+=r[4]*ef(r[1])*Math.sin((r[0]*Dm+r[1]*M+r[2]*Mp+r[3]*F)*D)});
+  sl+=3958*Math.sin(A1*D)+1962*Math.sin((Lp-F)*D)+318*Math.sin(A2*D);
+  sb+=-2235*Math.sin(Lp*D)+382*Math.sin(A3*D)+175*Math.sin((A1-F)*D)+175*Math.sin((A1+F)*D)+127*Math.sin((Lp-Mp)*D)-115*Math.sin((Lp+Mp)*D);
+  var om=(125.04452-1934.136261*T)*D,Ls=(280.4665+36000.7698*T)*D,Lm=Lp*D;
+  var dpsi=(-17.20*Math.sin(om)-1.32*Math.sin(2*Ls)-0.23*Math.sin(2*Lm)+0.21*Math.sin(2*om))/3600,deps=(9.20*Math.cos(om)+0.57*Math.cos(2*Ls)+0.10*Math.cos(2*Lm)-0.09*Math.cos(2*om))/3600;
+  var lam=(Lp+sl/1e6+dpsi)*D,bet=sb/1e6*D,dist=385000.56+sr/1000,ep=(23.4392911-0.0130042*T+deps)*D;
+  var ra=n360(Math.atan2(Math.sin(lam)*Math.cos(ep)-Math.tan(bet)*Math.sin(ep),Math.cos(lam))/D);
+  var dec=Math.asin(Math.sin(bet)*Math.cos(ep)+Math.cos(bet)*Math.sin(ep)*Math.sin(lam))/D;
+  var hp=Math.asin(6378.14/dist)/D,sd=Math.asin(1737.4/dist)/D,el=n360(lam/D-sunAt(ms).lam);
+  var cpsi=Math.cos(bet)*Math.cos(el*D),k=(1-Math.cos(Math.PI-Math.acos(cpsi)))/2;
+  return {ra:ra,dec:dec,gha:n360(gmst(ms)+dpsi*Math.cos(ep)-ra),lam:lam/D,bet:bet/D,dist:dist,hp:hp,sd:sd,elong:el,illum:1-k,wax:el<180};
+}
+function moonPhase(el){return el<8||el>352?"новолуние":el<82?"растущий серп":el<98?"первая четверть":el<172?"растущая Луна":el<188?"полнолуние":el<262?"убывающая Луна":el<278?"последняя четверть":"убывающий серп"}
 function azAlt(lat,dec,lha){
   var az=n360(Math.atan2(-Math.sin(lha*D),Math.tan(dec*D)*Math.cos(lat*D)-Math.sin(lat*D)*Math.cos(lha*D))/D);
   var h=Math.asin(Math.sin(lat*D)*Math.sin(dec*D)+Math.cos(lat*D)*Math.cos(dec*D)*Math.cos(lha*D))/D;
@@ -923,20 +944,22 @@ function skyCalc(){
   if(isNaN(lat)||isNaN(lon)||isNaN(z)||!$("date").value||!$("time").value){info.textContent="Введите координаты, дату, время и пояс на вкладке «Расчёт поправки компаса» или нажмите «Обновить».";$("skytb").innerHTML="";$("skychart").innerHTML="";$("skyn").textContent="";return}
   var ds=$("date").value.split("-"),ts=$("time").value.split(":"),tzh=($("zs").value==="E"?1:-1)*z;
   var utc=Date.UTC(+ds[0],+ds[1]-1,+ds[2],+ts[0],+ts[1],+(ts[2]||0))-tzh*3600000,u=new Date(utc);
-  var g=gmst(utc),sn=sunAt(utc),rs=azAlt(lat,sn.dec,n360(sn.gha+lon)),list=[{n:"Солнце",az:rs.az,h:rs.h,sun:true}];
+  var g=gmst(utc),sn=sunAt(utc),rs=azAlt(lat,sn.dec,n360(sn.gha+lon)),mo=moonAt(utc),rm=azAlt(lat,mo.dec,n360(mo.gha+lon)),list=[];
+  var mh=rm.h-mo.hp*Math.cos(rm.h*D),pin=[{n:"☀️ Солнце",az:rs.az,h:rs.h,sun:true},{n:"🌙 Луна",az:rm.az,h:mh,moon:true}];
   ST.forEach(function(s,i){var st=starAt(utc,s),r=azAlt(lat,st.dec,n360(g+st.eq+st.sha+lon));list.push({n:(i<57?(i+1)+" ":"")+s[0],az:r.az,h:r.h})});
-  var minH=+$("skymin").value,vis=list.filter(function(o){return o.h>=minH}),so=$("skysort").value;
-  vis.sort(function(a,b){return so==="az"?a.az-b.az:so==="n"?a.n.localeCompare(b.n,"ru"):b.h-a.h});
+  var minH=+$("skymin").value,stars=list.filter(function(o){return o.h>=minH}),so=$("skysort").value;
+  stars.sort(function(a,b){return so==="az"?a.az-b.az:so==="n"?a.n.localeCompare(b.n,"ru"):b.h-a.h});
   var ph=rs.h>0?"день":rs.h>-6?"гражданские сумерки":rs.h>-12?"навигационные сумерки (удобно для звёзд и горизонта)":rs.h>-18?"астрономические сумерки":"ночь";
-  info.textContent="φ "+(lat>=0?"N ":"S ")+dm(Math.abs(lat))+", λ "+(lon>=0?"E ":"W ")+dm(Math.abs(lon))+" · UTC "+pad(u.getUTCDate(),2)+"."+pad(u.getUTCMonth()+1,2)+"."+u.getUTCFullYear()+" "+pad(u.getUTCHours(),2)+":"+pad(u.getUTCMinutes(),2)+":"+pad(u.getUTCSeconds(),2)+" · Солнце h = "+rs.h.toFixed(1)+"°: "+ph;
-  $("skytb").innerHTML="<tr><td class='h'>Светило</td><td class='h' style='text-align:right'>ИП</td><td class='h' style='text-align:right'>Высота h</td></tr>"+vis.map(function(o){return "<tr><td>"+o.n+"</td><td style='text-align:right'>"+o.az.toFixed(1)+"°</td><td>"+o.h.toFixed(1)+"°</td></tr>"}).join("");
-  $("skyn").textContent="Светил в списке: "+vis.length+" из "+list.length+"."+(rs.h>-6?" Небо светлое: звёзды невооружённым глазом не видны, показаны расчётные положения.":"");
+  info.textContent="φ "+(lat>=0?"N ":"S ")+dm(Math.abs(lat))+", λ "+(lon>=0?"E ":"W ")+dm(Math.abs(lon))+" · UTC "+pad(u.getUTCDate(),2)+"."+pad(u.getUTCMonth()+1,2)+"."+u.getUTCFullYear()+" "+pad(u.getUTCHours(),2)+":"+pad(u.getUTCMinutes(),2)+":"+pad(u.getUTCSeconds(),2)+" · Солнце h = "+rs.h.toFixed(1)+"°: "+ph+" · Луна: "+moonPhase(mo.elong)+", освещено "+Math.round(mo.illum*100)+" %";
+  var vis=pin.filter(function(o){return o.h>=minH}).concat(stars);
+  $("skytb").innerHTML="<tr><td class='h'>Светило</td><td class='h' style='text-align:right'>ИП</td><td class='h' style='text-align:right'>Высота h</td></tr>"+pin.concat(stars).map(function(o){var lo=o.h<minH,st=lo?" style='opacity:.55'":"";return "<tr"+st+"><td>"+o.n+(lo?" <span style='font-size:12px;color:var(--mut)'>"+(o.h<0?"под горизонтом":"ниже "+minH+"°")+"</span>":"")+"</td><td style='text-align:right'>"+o.az.toFixed(1)+"°</td><td>"+o.h.toFixed(1)+"°</td></tr>"}).join("")+(stars.length?"":"<tr><td colspan='3'>Звёзд выше "+minH+"° нет</td></tr>");
+  $("skyn").textContent="Звёзд в списке: "+stars.length+" из "+list.length+". Солнце и Луна показаны всегда. Высота Луны исправлена за параллакс (HP = "+(mo.hp*60).toFixed(1)+"′, SD = "+(mo.sd*60).toFixed(1)+"′)."+(rs.h>-6?" Небо светлое: звёзды невооружённым глазом не видны, показаны расчётные положения.":"");
   var c=160,R=135,sv="";
   [0,30,60].forEach(function(a){var r=R*(90-a)/90;sv+="<circle cx='"+c+"' cy='"+c+"' r='"+r.toFixed(1)+"' style='fill:none;stroke:var(--bd)'/>"+(a>0?"<text x='"+(c+3)+"' y='"+(c-r-2).toFixed(1)+"' style='fill:var(--mut);font-size:9px'>"+a+"°</text>":"")});
   sv+="<line x1='"+c+"' x2='"+c+"' y1='"+(c-R)+"' y2='"+(c+R)+"' style='stroke:var(--bd)'/><line x1='"+(c-R)+"' x2='"+(c+R)+"' y1='"+c+"' y2='"+c+"' style='stroke:var(--bd)'/>";
   [["N",c,c-R-6],["S",c,c+R+14],["E",c+R+8,c+4],["W",c-R-8,c+4]].forEach(function(t){sv+="<text x='"+t[1]+"' y='"+t[2]+"' text-anchor='middle' style='fill:var(--tx);font-weight:700;font-size:12px'>"+t[0]+"</text>"});
   vis.forEach(function(o){var r=R*(90-o.h)/90,a=o.az*Math.PI/180,x=c+r*Math.sin(a),y=c-r*Math.cos(a);
-    sv+="<circle cx='"+x.toFixed(1)+"' cy='"+y.toFixed(1)+"' r='"+(o.sun?7:3.5)+"' style='fill:"+(o.sun?"#f5b301":o.n==="Polaris"?"#fff;stroke:#8a99ad;stroke-width:1":"var(--ac)")+"'/><text x='"+(x+6).toFixed(1)+"' y='"+(y+3).toFixed(1)+"' style='fill:var(--tx);font-size:8px'>"+o.n.replace(/^\d+ /,"")+"</text>"});
+    sv+="<circle cx='"+x.toFixed(1)+"' cy='"+y.toFixed(1)+"' r='"+(o.sun||o.moon?7:3.5)+"' style='fill:"+(o.sun?"#f5b301":o.moon?"#d9e1ea;stroke:#8a99ad;stroke-width:1":o.n==="Polaris"?"#fff;stroke:#8a99ad;stroke-width:1":"var(--ac)")+"'/><text x='"+(x+6).toFixed(1)+"' y='"+(y+3).toFixed(1)+"' style='fill:var(--tx);font-size:8px'>"+o.n.replace(/^\d+ /,"").replace(/^\S+ (Солнце|Луна)$/,"$1")+"</text>"});
   $("skychart").innerHTML="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 340' style='width:100%;max-width:520px;height:auto;display:block;margin:0 auto;font-family:system-ui,sans-serif'><g transform='translate(0,6)'>"+sv+"</g></svg>";
 }
 $("skyup").onclick=function(){
