@@ -68,8 +68,8 @@ input,select{height:48px}
 </style>
 </head>
 <body>
-<div class="menu" id="menu"><button id="menuBtn" aria-haspopup="true"><span id="menuLbl">🧭 Расчёт поправки компаса</span><span>▾</span></button><div class="tabs" id="tabsMenu"><button class="tab on" data-t="t1">🧭 Расчёт поправки компаса</button><button class="tab" data-t="t2">🚢 Расчёт ETA</button><button class="tab" data-t="t3">🌊 Приливы</button><button class="tab" data-t="t4">📖 Таблицы ATT</button><button class="tab" data-t="t6">🌟 Азимуты светил</button><button class="tab" data-t="t5">⚖️ Расчёт метацентрической высоты по периоду качки</button></div></div>
-<section id="t1"><div class="seg" id="t1seg"><button data-p="res">📊 Результат</button><button data-p="in" class="on">✏️ Ввод данных</button></div><div id="t1wrap"><div id="t1in">
+<div class="menu" id="menu"><button id="menuBtn" aria-haspopup="true"><span id="menuLbl">🚢 Расчёт ETA</span><span>▾</span></button><div class="tabs" id="tabsMenu"><button class="tab on" data-t="t2">🚢 Расчёт ETA</button><button class="tab" data-t="t1">🧭 Расчёт поправки компаса</button><button class="tab" data-t="t3">🌊 Приливы</button><button class="tab" data-t="t4">📖 Таблицы ATT</button><button class="tab" data-t="t6">🌟 Азимуты светил</button><button class="tab" data-t="t5">⚖️ Расчёт метацентрической высоты по периоду качки</button></div></div>
+<section id="t1" hidden><div class="seg" id="t1seg"><button data-p="res">📊 Результат</button><button data-p="in" class="on">✏️ Ввод данных</button></div><div id="t1wrap"><div id="t1in">
 
 <div class="card">
 <h2>Координаты</h2>
@@ -123,7 +123,7 @@ input,select{height:48px}
 </div>
 </section>
 
-<section id="t2" hidden>
+<section id="t2">
 <div class="duo">
 <div class="card">
 <h2>Отход</h2>
@@ -541,7 +541,7 @@ function calc(){
 $("calc").onclick=calc;
 document.querySelectorAll(".tab").forEach(function(b){b.onclick=function(){
   document.querySelectorAll(".tab").forEach(function(x){x.classList.toggle("on",x===b)});
-  ["t1","t2","t3","t4","t5","t6"].forEach(function(id){$(id).hidden=b.dataset.t!==id});if(b.dataset.t==="t6")skyCalc();
+  ["t1","t2","t3","t4","t5","t6"].forEach(function(id){$(id).hidden=b.dataset.t!==id});if(b.dataset.t==="t6")skyCalc();if(b.dataset.t==="t1"&&window.t1Init)window.t1Init();
 }});
 ["tzn","azn"].forEach(function(id){var h="";for(var i=0;i<=12;i++)h+="<option value=\""+i+"\">"+i+"</option>";$(id).innerHTML=h});
 (function(){var d=new Date(),o=-d.getTimezoneOffset()/60;
@@ -835,7 +835,7 @@ function kcalc(){
   window.showP=function(p){w.scrollTo({left:p==="res"?0:w.scrollWidth,behavior:"smooth"})};
   btns.forEach(function(b){b.onclick=function(){window.showP(b.getAttribute("data-p"))}});
   w.addEventListener("scroll",mark);
-  if(window.matchMedia("(max-width:599px)").matches)setTimeout(function(){w.scrollLeft=w.scrollWidth;mark()},50);
+  var done=false;window.t1Init=function(){if(done||!window.matchMedia("(max-width:599px)").matches)return;done=true;w.scrollLeft=w.scrollWidth;mark()};
 })();
 
 function nowFields(){
